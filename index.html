@@ -31,13 +31,49 @@
     </div>
   </section>
 
+  <!-- بطاقة إنشاء اللعبة (الدائرة وزر Başla ينقلان إلى قسم الفئات) -->
   <div class="hero-card">
-    <span class="hero-plus">+</span>
+    <div class="hero-plus" onclick="scrollToCategories()" title="Kategorilere Git">+</div>
     <h2>Oyun Oluştur</h2>
     <p>Kategorilerini seç, iki takım kur ve yarışmaya başla. Her kategoride 200, 400 ve 600 puanlık sorular seni bekliyor.</p>
     <a class="hero-btn" href="#oyun">Başla</a>
   </div>
 
+  <!-- قسم قواعد اللعبة -->
+  <section class="game-rules-section">
+      <div class="container">
+          <h2>Oyun Nasıl Oynanır?</h2>
+          <p class="rules-subtitle">"Sor Bakalım" heyecan dolu bilgi yarışmasının kuralları çok basit!</p>
+          
+          <div class="rules-grid">
+              <div class="rule-card">
+                  <div class="rule-icon">🎯</div>
+                  <h3>1. Kategori ve Puan Seçimi</h3>
+                  <p>Sırası gelen oyuncu/takım, Türk kültürü, diziler, tarih veya mutfak kategorilerinden birini ve zorluk derecesine göre puan değerini (200, 400, 600) seçer.</p>
+              </div>
+              
+              <div class="rule-card">
+                  <div class="rule-icon">⏱️</div>
+                  <h3>2. Soru ve Süre</h3>
+                  <p>Seçilen kategoriye ait soru ekrana gelir. Doğru cevabı bulmak için sınırlı bir süre vardır (30 saniye). Hızlı düşünen kazanır!</p>
+              </div>
+              
+              <div class="rule-card">
+                  <div class="rule-icon">🏆</div>
+                  <h3>3. Puanlama ve Yarış</h3>
+                  <p>Doğru cevaplar puanı hanenize yazdırır. Yanlış cevaplarda ise sıra rakibe geçer. En yüksek puanı toplayan oyunun galibi olur!</p>
+              </div>
+              
+              <div class="rule-card">
+                  <div class="rule-icon">💡</div>
+                  <h3>4. Joker Hakları</h3>
+                  <p>Tıkanıp kaldığınız anlarda "50/50" (iki yanlış şıkkı eleme) veya "Sunucuya Sor" gibi joker haklarınızı akıllıca kullanarak zorlukları aşabilirsiniz.</p>
+              </div>
+          </div>
+      </div>
+  </section>
+
+  <!-- قسم اختيار الفئات -->
   <section class="sec" id="oyun">
     <div class="sec-head">
       <h2 class="sec-title">Kategorilerini seç</h2>
@@ -48,29 +84,112 @@
 
     <div class="startbar">
       <span class="count" id="count">Seçilen: 0 / 6</span>
-      <button class="go" id="go" disabled>Oyuna başla</button>
+      <button class="go" id="go" disabled>Kategorileri Kaydet</button>
     </div>
     <p class="note" id="note" aria-live="polite"></p>
   </section>
+
+  <!-- قسم إعدادات الفرق وتحديد الأسماء ووسائل المساعدة وتقسيم الفرق التلقائي -->
+  <section class="team-setup-section">
+    <div class="container">
+      <h2>Takım Bilgilerini Belirle</h2>
+      
+      <div class="game-name-input-wrapper">
+        <input type="text" id="gameName" placeholder="Oyun Adı (Örn: Aile Yarışması)" class="main-input">
+      </div>
+
+      <div class="teams-inputs-grid">
+        <div class="team-input-box">
+          <h3>Birinci Takım</h3>
+          <input type="text" id="team1Name" placeholder="Birinci Takım Adı" class="main-input">
+        </div>
+        <div class="team-input-box">
+          <h3>İkinci Takım</h3>
+          <input type="text" id="team2Name" placeholder="İkinci Takım Adı" class="main-input">
+        </div>
+      </div>
+
+      <div class="lifelines-selection-grid">
+        <div class="team-lifelines">
+          <h3>Birinci Takım: Joker Hakları Seç</h3>
+          <div class="lifelines-options">
+            <button class="lifeline-btn sel" data-team="1" data-lifeline="double">Cevabı İkiye Katla</button>
+            <button class="lifeline-btn sel" data-team="1" data-lifeline="call">Telefonla Joker</button>
+            <button class="lifeline-btn sel" data-team="1" data-lifeline="pit">Çukur</button>
+            <button class="lifeline-btn" data-team="1" data-lifeline="rest">Dinlen</button>
+            <button class="lifeline-btn" data-team="1" data-lifeline="trap">Tuzak</button>
+          </div>
+        </div>
+
+        <div class="team-lifelines">
+          <h3>İkinci Takım: Joker Hakları Seç</h3>
+          <div class="lifelines-options">
+            <button class="lifeline-btn sel" data-team="2" data-lifeline="double">Cevabı İkiye Katla</button>
+            <button class="lifeline-btn sel" data-team="2" data-lifeline="call">Telefonla Joker</button>
+            <button class="lifeline-btn sel" data-team="2" data-lifeline="pit">Çukur</button>
+            <button class="lifeline-btn" data-team="2" data-lifeline="rest">Dinlen</button>
+            <button class="lifeline-btn" data-team="2" data-lifeline="trap">Tuzak</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- القائمة المنسدلة لتقسيم الفرق تلقائياً -->
+      <div class="dropdown-team-splitter">
+        <button class="split-toggle-btn" id="toggleSplitter" type="button">
+          <span>Takımlara Böl (Otomatik Dağıtıcı)</span>
+          <span class="arrow-icon" id="arrowIcon">▼</span>
+        </button>
+
+        <div class="splitter-content" id="splitterContent" style="display: none;">
+          <div class="player-count-box">
+            <label>Oyuncu Sayısı (Kaç kişi oynayacak?)</label>
+            <div class="counter-control">
+              <button type="button" id="minusBtn">-</button>
+              <span id="playerCountDisplay">2</span>
+              <button type="button" id="plusBtn">+</button>
+            </div>
+          </div>
+
+          <div class="player-names-grid" id="playerNamesGrid"></div>
+
+          <button type="button" id="generateTeamsBtn" class="generate-teams-btn">Dağılımı Yap (Takımları Oluştur)</button>
+          
+          <div class="generated-teams-result" id="generatedTeamsResult" style="display: none;">
+            <h4>Oluşturulan Takımlar:</h4>
+            <div class="result-teams-grid">
+              <div class="res-team" id="resTeam1"></div>
+              <div class="res-team" id="resTeam2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- زر ابدأ اللعب النهائي (مع شاشة التحميل) -->
+      <div class="final-start-container" style="margin-top: 40px;">
+        <button id="finalStartBtn" class="final-start-btn" onclick="startLoadingAndRedirect()">Oyunu Başlat</button>
+      </div>
+
+    </div>
+  </section>
+
 </main>
 
 <script>
   const MAX = 6, MIN = 2;
 
-  // img: صورتك الحقيقية، مثل "images/hayvan.jpg". إذا تركتها فارغة يظهر الإيموجي.
   const CATS = [
-    { id: "tarih",    name: "Tarih",            emoji: "🏛️", img: "", info: "Osmanlı’dan Cumhuriyet’e tarih soruları" },
-    { id: "cografya", name: "Coğrafya",         emoji: "🗺️", img: "", info: "Şehirler, dağlar, nehirler" },
-    { id: "yemek",    name: "Yemek",            emoji: "🍢", img: "", info: "Türk mutfağı ve lezzetler" },
-    { id: "spor",     name: "Spor",             emoji: "⚽", img: "", info: "Futbol, basketbol ve daha fazlası" },
-    { id: "kultur",   name: "Kültür ve Sanat",  emoji: "🎭", img: "", info: "Edebiyat, müzik, sinema" },
-    { id: "genel",    name: "Genel Kültür",     emoji: "💡", img: "", info: "Her konudan karışık sorular" },
-    { id: "hayvan",   name: "Hayvanlar Alemi",  emoji: "🦁", img: "", info: "Hayvanlar hakkında ilginç sorular" },
-    { id: "teknoloji",name: "Teknoloji",        emoji: "💻", img: "", info: "Bilgisayar, telefon, internet" },
-    { id: "muzik",    name: "Müzik",            emoji: "🎵", img: "", info: "Sanatçılar ve şarkılar" },
-    { id: "dizi",     name: "Dizi ve Film",     emoji: "🎬", img: "", info: "Türk dizileri ve filmleri" },
-    { id: "sehir",    name: "Şehirler",         emoji: "🌆", img: "", info: "81 ilimiz hakkında sorular" },
-    { id: "atasozu",  name: "Atasözleri",       emoji: "📜", img: "", info: "Atasözleri ve deyimler" }
+    { id: "tarih",    name: "Tarih",             emoji: "🏛️", img: "", info: "Osmanlı’dan Cumhuriyet’e tarih soruları" },
+    { id: "cografya", name: "Coğrafya",          emoji: "🗺️", img: "", info: "Şehirler, dağlar, nehirler" },
+    { id: "yemek",    name: "Yemek",             emoji: "🍢", img: "", info: "Türk mutfağı ve lezzetler" },
+    { id: "spor",     name: "Spor",              emoji: "⚽", img: "", info: "Futbol, basketbol ve daha fazlası" },
+    { id: "kultur",   name: "Kültür ve Sanat",   emoji: "🎭", img: "", info: "Edebiyat, müzik, sinema" },
+    { id: "genel",    name: "Genel Kültür",      emoji: "💡", img: "", info: "Her konudan karışık sorular" },
+    { id: "hayvan",   name: "Hayvanlar Alemi",   emoji: "🦁", img: "", info: "Hayvanlar hakkında ilginç sorular" },
+    { id: "teknoloji",name: "Teknoloji",         emoji: "💻", img: "", info: "Bilgisayar, telefon, internet" },
+    { id: "muzik",    name: "Müzik",             emoji: "🎵", img: "", info: "Sanatçılar ve şarkılar" },
+    { id: "dizi",     name: "Dizi ve Film",      emoji: "🎬", img: "", info: "Türk dizileri ve filmleri" },
+    { id: "sehir",    name: "Şehirler",          emoji: "🌆", img: "", info: "81 ilimiz hakkında sorular" },
+    { id: "atasozu",  name: "Atasözleri",        emoji: "📜", img: "", info: "Atasözleri ve deyimler" }
   ];
 
   let picked = [];
@@ -112,10 +231,102 @@
 
   $("go").onclick = () => {
     try { localStorage.setItem("cats", JSON.stringify(picked)); } catch (e) {}
-    $("note").textContent = "Kategoriler kaydedildi ✓ Oyun ekranını bir sonraki adımda yapacağız.";
+    $("note").textContent = "Kategoriler kaydedildi ✓ Şimdi takım bilgilerini doldurabilirsin.";
   };
 
   refresh();
+
+  // دالة الانتقال السلس إلى قسم الفئات عند الضغط على علامة الزائد (+)
+  function scrollToCategories() {
+    document.getElementById('oyun').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.querySelectorAll(".lifeline-btn").forEach(btn => {
+    btn.onclick = () => { btn.classList.toggle("sel"); };
+  });
+
+  const toggleSplitter = $("toggleSplitter");
+  const splitterContent = $("splitterContent");
+  const arrowIcon = $("arrowIcon");
+  let playerCount = 2;
+
+  toggleSplitter.onclick = () => {
+    if (splitterContent.style.display === "none") {
+      splitterContent.style.display = "block";
+      arrowIcon.textContent = "▲";
+      renderPlayerInputs();
+    } else {
+      splitterContent.style.display = "none";
+      arrowIcon.textContent = "▼";
+    }
+  };
+
+  const playerCountDisplay = $("playerCountDisplay");
+  const playerNamesGrid = $("playerNamesGrid");
+
+  function renderPlayerInputs() {
+    let html = "";
+    for (let i = 1; i <= playerCount; i++) {
+      html += `<input type="text" class="main-input player-name-input" placeholder="${i}. Oyuncu Adı">`;
+    }
+    playerNamesGrid.innerHTML = html;
+  }
+
+  $("plusBtn").onclick = () => {
+    if (playerCount < 10) {
+      playerCount++;
+      playerCountDisplay.textContent = playerCount;
+      renderPlayerInputs();
+    }
+  };
+
+  $("minusBtn").onclick = () => {
+    if (playerCount > 2) {
+      playerCount--;
+      playerCountDisplay.textContent = playerCount;
+      renderPlayerInputs();
+    }
+  };
+
+  $("generateTeamsBtn").onclick = () => {
+    const inputs = document.querySelectorAll(".player-name-input");
+    let players = [];
+    inputs.forEach((input, index) => {
+      let name = input.value.trim();
+      players.push(name !== "" ? name : `${index + 1}. Oyuncu`);
+    });
+
+    players.sort(() => Math.random() - 0.5);
+    let mid = Math.ceil(players.length / 2);
+    let team1Players = players.slice(0, mid);
+    let team2Players = players.slice(mid);
+
+    let t1Name = $("team1Name").value.trim() || "Birinci Takım";
+    let t2Name = $("team2Name").value.trim() || "İkinci Takım";
+
+    $("resTeam1").innerHTML = `<strong>${t1Name}</strong><ul>` + team1Players.map(p => `<li>${p}</li>`).join("") + "</ul>";
+    $("resTeam2").innerHTML = `<strong>${t2Name}</strong><ul>` + team2Players.map(p => `<li>${p}</li>`).join("") + "</ul>";
+
+    $("generatedTeamsResult").style.display = "block";
+  };
+
+  // شاشة التحميل والانتقال إلى صفحة اللعبة
+  function startLoadingAndRedirect() {
+    const loader = document.createElement('div');
+    loader.className = 'loading-overlay';
+    loader.innerHTML = `
+      <div class="loader-content">
+        <div class="spinner"></div>
+        <h2>Stüdyo Kuruluyor...</h2>
+        <p>Yarışma ekranına yönlendiriliyorsunuz!</p>
+      </div>
+    `;
+    document.body.appendChild(loader);
+
+    setTimeout(() => {
+      window.location.href = 'game.html';
+    }, 1000);
+  }
 </script>
 </body>
 </html>
