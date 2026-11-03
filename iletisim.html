@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İletişim · Sor Bakalım</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <nav class="nav">
+    <a class="logo" href="index.html">Sor Bakalım</a>
+    <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link on" href="iletisim.html">İletişim</a>
+    <div class="auth">
+      <a href="giris.html">Giriş Yap</a>
+      <span class="sep"></span>
+      <a href="kayit.html">Hesap Oluştur</a>
+    </div>
+  </nav>
+</header>
+
+<main class="lg-wrap">
+  <section class="lg-card">
+    <h1>Bize ulaş 💬</h1>
+    <p class="lg-sub">Soru önerin, hata bildirimi ya da fikirleriniz için yazın.</p>
+
+    <form id="form" novalidate>
+      <div class="lg-field">
+        <label for="name">Ad Soyad</label>
+        <input class="lg-input" id="name" type="text" placeholder="Adını yaz" autocomplete="name">
+      </div>
+
+      <div class="lg-field">
+        <label for="email">E-posta</label>
+        <input class="lg-input" id="email" type="email" placeholder="ornek@mail.com" autocomplete="email">
+      </div>
+
+      <div class="lg-field">
+        <label for="code">Ülke</label>
+        <select class="lg-input" id="code">
+          <option value="+90" selected>Türkiye (+90)</option>
+          <option value="+965">Kuveyt (+965)</option>
+          <option value="+966">Suudi Arabistan (+966)</option>
+          <option value="+49">Almanya (+49)</option>
+          <option value="+44">Birleşik Krallık (+44)</option>
+          <option value="+1">ABD (+1)</option>
+        </select>
+      </div>
+
+      <div class="lg-field">
+        <label for="phone">Telefon numarası</label>
+        <input class="lg-input" id="phone" type="tel" inputmode="numeric" placeholder="5xx xxx xx xx" autocomplete="tel-national">
+      </div>
+
+      <div class="lg-field">
+        <label for="text">Mesajın</label>
+        <textarea class="lg-input" id="text" placeholder="Mesajını buraya yaz…" maxlength="500"></textarea>
+        <div class="lg-count" id="count">0 / 500</div>
+      </div>
+
+      <p class="lg-msg" id="msg" aria-live="polite"></p>
+
+      <button class="lg-submit" type="submit">Gönder</button>
+    </form>
+  </section>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const msg = $("msg");
+
+  $("text").oninput = () => { $("count").textContent = $("text").value.length + " / 500"; };
+
+  function fail(text, field) { msg.className = "lg-msg"; msg.textContent = text; field.focus(); }
+
+  $("form").onsubmit = e => {
+    e.preventDefault();
+    if (!$("name").value.trim()) return fail("Adını yaz.", $("name"));
+    if (!/^\S+@\S+\.\S+$/.test($("email").value)) return fail("Geçerli bir e-posta gir.", $("email"));
+    if ($("phone").value && !/^\d{7,12}$/.test($("phone").value.replace(/\s/g, ""))) return fail("Geçerli bir telefon numarası gir.", $("phone"));
+    if ($("text").value.trim().length < 10) return fail("Mesaj en az 10 karakter olmalı.", $("text"));
+    msg.className = "lg-msg ok";
+    msg.textContent = "Mesaj gönderme çok yakında aktif olacak.";
+  };
+</script>
+</body>
+</html>

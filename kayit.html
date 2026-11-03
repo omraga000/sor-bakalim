@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hesap Oluştur · Sor Bakalım</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <nav class="nav">
+    <a class="logo" href="index.html">Sor Bakalım</a>
+    <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link" href="index.html#iletisim">İletişim</a>
+    <div class="auth">
+      <a href="giris.html">Giriş Yap</a>
+      <span class="sep"></span>
+      <a href="kayit.html" class="on">Hesap Oluştur</a>
+    </div>
+  </nav>
+</header>
+
+<main class="lg-wrap">
+  <section class="lg-card">
+    <h1> Hesap oluştur </h1>
+    <p class="lg-sub">Birkaç bilgi yeter, hemen oynamaya başla.</p>
+
+    <form id="form" novalidate>
+      <div class="lg-row">
+        <div class="lg-field">
+          <label for="fname">Ad</label>
+          <input class="lg-input" id="fname" type="text" placeholder="Adın" autocomplete="given-name">
+        </div>
+        <div class="lg-field">
+          <label for="lname">Soyad</label>
+          <input class="lg-input" id="lname" type="text" placeholder="Soyadın" autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="lg-field">
+        <label for="email">E-posta</label>
+        <input class="lg-input" id="email" type="email" placeholder="ornek@mail.com" autocomplete="email">
+      </div>
+
+      <div class="lg-field">
+        <label for="birth">Doğum tarihi</label>
+        <input class="lg-input" id="birth" type="date" autocomplete="bday">
+      </div>
+
+      <div class="lg-field">
+        <label for="code">Ülke</label>
+        <select class="lg-input" id="code">
+          <option value="+90" selected>Türkiye (+90)</option>
+          <option value="+965">Kuveyt (+965)</option>
+          <option value="+966">Suudi Arabistan (+966)</option>
+          <option value="+49">Almanya (+49)</option>
+          <option value="+44">Birleşik Krallık (+44)</option>
+          <option value="+1">ABD (+1)</option>
+        </select>
+      </div>
+
+      <div class="lg-field">
+        <label for="phone">Telefon numarası</label>
+        <input class="lg-input" id="phone" type="tel" inputmode="numeric" placeholder="5xx xxx xx xx" autocomplete="tel-national">
+      </div>
+
+      <div class="lg-field">
+        <label for="pass">Şifre</label>
+        <div class="lg-pw">
+          <input class="lg-input" id="pass" type="password" placeholder="En az 6 karakter" autocomplete="new-password">
+          <button type="button" class="lg-toggle" data-for="pass">Göster</button>
+        </div>
+      </div>
+
+      <div class="lg-field">
+        <label for="pass2">Şifre tekrar</label>
+        <div class="lg-pw">
+          <input class="lg-input" id="pass2" type="password" placeholder="Şifreni tekrar yaz" autocomplete="new-password">
+          <button type="button" class="lg-toggle" data-for="pass2">Göster</button>
+        </div>
+      </div>
+
+      <label class="lg-check">
+        <input type="checkbox" id="terms">
+        <span><a href="#">Kullanım şartlarını</a> kabul ediyorum</span>
+      </label>
+
+      <p class="lg-msg" id="msg" aria-live="polite"></p>
+
+      <button class="lg-submit" type="submit">Kayıt Ol</button>
+
+      <p class="lg-alt">Zaten hesabın var mı? <a href="giris.html">Giriş yap</a></p>
+    </form>
+  </section>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const msg = $("msg");
+
+  document.querySelectorAll(".lg-toggle").forEach(btn => {
+    btn.onclick = () => {
+      const input = $(btn.dataset.for);
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Gizle" : "Göster";
+    };
+  });
+
+  function fail(text, field) { msg.className = "lg-msg"; msg.textContent = text; field.focus(); }
+
+  $("form").onsubmit = e => {
+    e.preventDefault();
+    if (!$("fname").value.trim()) return fail("Adını yaz.", $("fname"));
+    if (!$("lname").value.trim()) return fail("Soyadını yaz.", $("lname"));
+    if (!/^\S+@\S+\.\S+$/.test($("email").value)) return fail("Geçerli bir e-posta gir.", $("email"));
+    if (!$("birth").value || new Date($("birth").value) > new Date()) return fail("Geçerli bir doğum tarihi seç.", $("birth"));
+    if (!/^\d{7,12}$/.test($("phone").value.replace(/\s/g, ""))) return fail("Geçerli bir telefon numarası gir.", $("phone"));
+    if ($("pass").value.length < 6) return fail("Şifre en az 6 karakter olmalı.", $("pass"));
+    if ($("pass").value !== $("pass2").value) return fail("Şifreler aynı değil.", $("pass2"));
+    if (!$("terms").checked) return fail("Devam etmek için şartları kabul etmelisin.", $("terms"));
+    msg.className = "lg-msg ok";
+    msg.textContent = "Hesap oluşturma çok yakında aktif olacak.";
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giriş Yap · Sor Bakalım</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <nav class="nav">
+    <a class="logo" href="index.html">Sor Bakalım</a>
+    <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link" href="index.html#iletisim">İletişim</a>
+    <div class="auth">
+      <a href="giris.html" class="on">Giriş Yap</a>
+      <span class="sep"></span>
+      <a href="kayit.html">Hesap Oluştur</a>
+    </div>
+  </nav>
+</header>
+
+<main class="lg-wrap">
+  <section class="lg-card">
+    <h1> hoş geldin </h1>
+    <p class="lg-sub">Hesabına giriş yap ve kaldığın yerden devam et.</p>
+
+    <form id="form" novalidate>
+      <div class="lg-field">
+        <label for="email">E-posta</label>
+        <input class="lg-input" id="email" type="email" placeholder="ornek@mail.com" autocomplete="email">
+      </div>
+
+      <div class="lg-field">
+        <label for="pass">Şifre</label>
+        <div class="lg-pw">
+          <input class="lg-input" id="pass" type="password" placeholder="Şifren" autocomplete="current-password">
+          <button type="button" class="lg-toggle" id="toggle">Göster</button>
+        </div>
+      </div>
+
+      <p class="lg-msg" id="msg" aria-live="polite"></p>
+
+      <div class="lg-links">
+        <a class="forgot" href="#">Şifremi unuttum?</a>
+        <a class="create" href="kayit.html">Hesap oluştur</a>
+      </div>
+
+      <button class="lg-submit" type="submit">Giriş Yap</button>
+    </form>
+  </section>
+</main>
+
+<script>
+  const email = document.getElementById("email");
+  const pass = document.getElementById("pass");
+  const msg = document.getElementById("msg");
+
+  document.getElementById("toggle").onclick = e => {
+    const show = pass.type === "password";
+    pass.type = show ? "text" : "password";
+    e.target.textContent = show ? "Gizle" : "Göster";
+  };
+
+  document.getElementById("form").onsubmit = e => {
+    e.preventDefault();
+    msg.className = "lg-msg";
+    if (!/^\S+@\S+\.\S+$/.test(email.value)) { msg.textContent = "Geçerli bir e-posta gir."; email.focus(); return; }
+    if (pass.value.length < 6) { msg.textContent = "Şifre en az 6 karakter olmalı."; pass.focus(); return; }
+    msg.className = "lg-msg ok";
+    msg.textContent = "Giriş özelliği çok yakında aktif olacak.";
+  };
+</script>
+</body>
+</html>

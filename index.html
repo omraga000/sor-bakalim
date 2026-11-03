@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sor Bakalım</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light">
+
+<header class="topbar">
+  <nav class="nav">
+    <a class="logo" href="index.html">Sor Bakalım</a>
+    <a class="play on" href="#oyun">Oyna</a>
+    <a class="link" href="iletisim.html">İletişim</a>
+    <div class="auth">
+      <a href="giris.html">Giriş Yap</a>
+      <span class="sep"></span>
+      <a href="kayit.html">Hesap Oluştur</a>
+    </div>
+  </nav>
+</header>
+
+<main id="ana">
+
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Oyun Oluştur</h1>
+      <p class="hero-lead">Arkadaşlarınla ya da ailenle oynayacağın bilgi yarışmasını dakikalar içinde hazırla.</p>
+      <p class="hero-steps">Yeni bir oyun başlatmak için <strong>“Başla”</strong> düğmesine bas, kategorilerini seç ve iki takım olarak yarış.</p>
+    </div>
+  </section>
+
+  <div class="hero-card">
+    <span class="hero-plus">+</span>
+    <h2>Oyun Oluştur</h2>
+    <p>Kategorilerini seç, iki takım kur ve yarışmaya başla. Her kategoride 200, 400 ve 600 puanlık sorular seni bekliyor.</p>
+    <a class="hero-btn" href="#oyun">Başla</a>
+  </div>
+
+  <section class="sec" id="oyun">
+    <div class="sec-head">
+      <h2 class="sec-title">Kategorilerini seç</h2>
+      <p>Oynamak istediğin kategorilere dokun. En az 2, en fazla 6 kategori seçebilirsin.</p>
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <div class="startbar">
+      <span class="count" id="count">Seçilen: 0 / 6</span>
+      <button class="go" id="go" disabled>Oyuna başla</button>
+    </div>
+    <p class="note" id="note" aria-live="polite"></p>
+  </section>
+</main>
+
+<script>
+  const MAX = 6, MIN = 2;
+
+  // img: صورتك الحقيقية، مثل "images/hayvan.jpg". إذا تركتها فارغة يظهر الإيموجي.
+  const CATS = [
+    { id: "tarih",    name: "Tarih",            emoji: "🏛️", img: "", info: "Osmanlı’dan Cumhuriyet’e tarih soruları" },
+    { id: "cografya", name: "Coğrafya",         emoji: "🗺️", img: "", info: "Şehirler, dağlar, nehirler" },
+    { id: "yemek",    name: "Yemek",            emoji: "🍢", img: "", info: "Türk mutfağı ve lezzetler" },
+    { id: "spor",     name: "Spor",             emoji: "⚽", img: "", info: "Futbol, basketbol ve daha fazlası" },
+    { id: "kultur",   name: "Kültür ve Sanat",  emoji: "🎭", img: "", info: "Edebiyat, müzik, sinema" },
+    { id: "genel",    name: "Genel Kültür",     emoji: "💡", img: "", info: "Her konudan karışık sorular" },
+    { id: "hayvan",   name: "Hayvanlar Alemi",  emoji: "🦁", img: "", info: "Hayvanlar hakkında ilginç sorular" },
+    { id: "teknoloji",name: "Teknoloji",        emoji: "💻", img: "", info: "Bilgisayar, telefon, internet" },
+    { id: "muzik",    name: "Müzik",            emoji: "🎵", img: "", info: "Sanatçılar ve şarkılar" },
+    { id: "dizi",     name: "Dizi ve Film",     emoji: "🎬", img: "", info: "Türk dizileri ve filmleri" },
+    { id: "sehir",    name: "Şehirler",         emoji: "🌆", img: "", info: "81 ilimiz hakkında sorular" },
+    { id: "atasozu",  name: "Atasözleri",       emoji: "📜", img: "", info: "Atasözleri ve deyimler" }
+  ];
+
+  let picked = [];
+  try {
+    const s = JSON.parse(localStorage.getItem("cats"));
+    if (Array.isArray(s)) picked = s.filter(id => CATS.some(c => c.id === id)).slice(0, MAX);
+  } catch (e) {}
+
+  const $ = id => document.getElementById(id);
+
+  $("cards").innerHTML = CATS.map(c => `
+    <button class="card" data-id="${c.id}" aria-pressed="false">
+      <span class="info" title="${c.info}">i</span>
+      <span class="tick">✓</span>
+      <span class="card-pic">${c.img ? `<img src="${c.img}" alt="${c.name}">` : c.emoji}</span>
+      <span class="card-name">${c.name}</span>
+    </button>`).join("");
+
+  function refresh() {
+    document.querySelectorAll(".card").forEach(b => {
+      const on = picked.includes(b.dataset.id);
+      b.classList.toggle("sel", on);
+      b.setAttribute("aria-pressed", on);
+    });
+    $("count").textContent = "Seçilen: " + picked.length + " / " + MAX;
+    $("go").disabled = picked.length < MIN;
+  }
+
+  document.querySelectorAll(".card").forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.id;
+      $("note").textContent = "";
+      if (picked.includes(id)) picked = picked.filter(x => x !== id);
+      else if (picked.length < MAX) picked.push(id);
+      else $("note").textContent = "En fazla " + MAX + " kategori seçebilirsin.";
+      refresh();
+    };
+  });
+
+  $("go").onclick = () => {
+    try { localStorage.setItem("cats", JSON.stringify(picked)); } catch (e) {}
+    $("note").textContent = "Kategoriler kaydedildi ✓ Oyun ekranını bir sonraki adımda yapacağız.";
+  };
+
+  refresh();
+</script>
+</body>
+</html>
