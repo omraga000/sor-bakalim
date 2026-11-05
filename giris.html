@@ -3,170 +3,74 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sor Bakalım - Oyun Alanı</title>
+<title>Giriş Yap · Sor Bakalım</title>
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/game.css">
 </head>
-<body class="game-body">
+<body>
 
-  <div id="loadingScreen" class="loading-overlay">
-    <div class="loader-content">
-      <div class="spinner"></div>
-      <h2>Sor Bakalım Hazırlanıyor...</h2>
-      <p>Sorular yükleniyor, stüdyo hazırlanıyor, biraz sabır!</p>
+<header class="topbar">
+  <nav class="nav">
+    <a class="logo" href="index.html">Sor Bakalım</a>
+    <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link" href="iletisim.html">İletişim</a>
+    <div class="auth">
+      <a href="giris.html" class="on">Giriş Yap</a>
+      <span class="sep"></span>
+      <a href="kayit.html">Hesap Oluştur</a>
     </div>
-  </div>
+  </nav>
+</header>
 
-  <header class="game-topbar">
-    <div class="topbar-left">
-      <button class="control-btn exit-btn" onclick="location.href='index.html'">🚪 Çıkış</button>
-      <button class="control-btn" onclick="location.href='index.html'">🏠 Ana Sayfa</button>
-      <button class="control-btn finish-btn">🏁 Oyunu Bitir</button>
-    </div>
-    <div class="topbar-center">
-      <span class="game-room-title" id="roomTitle">Sor Bakalım - Özel Maç</span>
-    </div>
-    <div class="topbar-right">
-      <div class="turn-badge" id="currentTurnBadge">Sıra: Birinci Takım</div>
-    </div>
-  </header>
+<main class="lg-wrap">
+  <section class="lg-card">
+    <h1>Tekrar hoş geldin 👋</h1>
+    <p class="lg-sub">Hesabına giriş yap ve kaldığın yerden devam et.</p>
 
-  <main class="game-main-container">
-    <div class="board-grid" id="boardGrid"></div>
-  </main>
+    <form id="form" novalidate>
+      <div class="lg-field">
+        <label for="email">E-posta</label>
+        <input class="lg-input" id="email" type="email" placeholder="ornek@mail.com" autocomplete="email">
+      </div>
 
-  <footer class="game-footer-bar">
-    <div class="team-panel team-one">
-      <div class="team-info">
-        <span class="team-name" id="displayTeam1">Birinci Takım</span>
-        <div class="score-box">
-          <button class="score-btn minus" onclick="updateScore(1, -100)">-</button>
-          <span class="score-value" id="score1">0</span>
-          <button class="score-btn plus" onclick="updateScore(1, 100)">+</button>
+      <div class="lg-field">
+        <label for="pass">Şifre</label>
+        <div class="lg-pw">
+          <input class="lg-input" id="pass" type="password" placeholder="Şifren" autocomplete="current-password">
+          <button type="button" class="lg-toggle" id="toggle">Göster</button>
         </div>
       </div>
-      <div class="lifelines-bar">
-        <span class="lifeline-icon" title="Çift Cevap">✌️</span>
-        <span class="lifeline-icon" title="Telefonla Joker">📞</span>
-        <span class="lifeline-icon" title="Çukur / Tuzak">💣</span>
+
+      <p class="lg-msg" id="msg" aria-live="polite"></p>
+
+      <div class="lg-links">
+        <a class="forgot" href="#">Şifremi unuttum?</a>
+        <a class="create" href="kayit.html">Hesap oluştur</a>
       </div>
-    </div>
 
-    <div class="game-status-msg" id="gameStatusMsg">
-      Bir kategori ve puan seçerek yarışmayı başlatın! 🎮
-    </div>
+      <button class="lg-submit" type="submit">Giriş Yap</button>
+    </form>
+  </section>
+</main>
 
-    <div class="team-panel team-two">
-      <div class="lifelines-bar">
-        <span class="lifeline-icon" title="Çift Cevap">✌️</span>
-        <span class="lifeline-icon" title="Telefonla Joker">📞</span>
-        <span class="lifeline-icon" title="Çukur / Tuzak">💣</span>
-      </div>
-      <div class="team-info">
-        <span class="team-name" id="displayTeam2">İkinci Takım</span>
-        <div class="score-box">
-          <button class="score-btn minus" onclick="updateScore(2, -100)">-</button>
-          <span class="score-value" id="score2">0</span>
-          <button class="score-btn plus" onclick="updateScore(2, 100)">+</button>
-        </div>
-      </div>
-    </div>
-  </footer>
+<script>
+  const email = document.getElementById("email");
+  const pass = document.getElementById("pass");
+  const msg = document.getElementById("msg");
 
-  <div id="questionModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-      <h3 id="modalCategoryTitle">Kategori Adı</h3>
-      <div class="modal-points" id="modalPoints">200 Puan</div>
-      <div class="modal-question-text" id="modalQuestionText">Soru buraya gelecek...</div>
-      <div class="modal-options" id="modalOptions"></div>
-      <button class="modal-close-btn" onclick="closeModal()">Kapat</button>
-    </div>
-  </div>
+  document.getElementById("toggle").onclick = e => {
+    const show = pass.type === "password";
+    pass.type = show ? "text" : "password";
+    e.target.textContent = show ? "Gizle" : "Göster";
+  };
 
-  <script>
-    window.onload = () => {
-      setTimeout(() => {
-        document.getElementById('loadingScreen').style.opacity = '0';
-        setTimeout(() => {
-          document.getElementById('loadingScreen').style.display = 'none';
-        }, 500);
-      }, 1200);
-    };
-
-    const defaultCategories = [
-      { id: "dizi", name: "Dizi ve Film", emoji: "🎬" },
-      { id: "yemek", name: "Türk Mutfağı", emoji: "🍢" },
-      { id: "tarih", name: "Tarih ve Kültür", emoji: "🏛️" },
-      { id: "spor", name: "Spor", emoji: "⚽" },
-      { id: "muzik", name: "Müzik", emoji: "🎵" },
-      { id: "genel", name: "Genel Kültür", emoji: "💡" }
-    ];
-
-    let scores = { 1: 0, 2: 0 };
-    let currentTurn = 1;
-
-    function updateScore(team, amount) {
-      scores[team] = Math.max(0, scores[team] + amount);
-      document.getElementById(`score${team}`).textContent = scores[team];
-    }
-
-    const boardGrid = document.getElementById('boardGrid');
-    const pointsList = [200, 400, 600];
-
-    defaultCategories.forEach(cat => {
-      let col = document.createElement('div');
-      col.className = 'board-column';
-      
-      let headerHTML = `
-        <div class="column-header">
-          <span class="cat-icon">${cat.emoji}</span>
-          <span class="cat-title">${cat.name}</span>
-        </div>
-      `;
-      
-      let buttonsHTML = '';
-      pointsList.forEach(pts => {
-        buttonsHTML += `<button class="point-tile" onclick="openQuestion('${cat.name}', ${pts}, this)">${pts}</button>`;
-      });
-
-      col.innerHTML = headerHTML + buttonsHTML;
-      boardGrid.appendChild(col);
-    });
-
-    function openQuestion(catName, pts, btnElement) {
-      document.getElementById('modalCategoryTitle').textContent = catName;
-      document.getElementById('modalPoints').textContent = pts + " Puan";
-      document.getElementById('modalQuestionText').textContent = `${catName} kategorisinden ${pts} puanlık harika bir soru yakında burada olacak!`;
-      
-      let optionsHTML = `
-        <button class="opt-btn" onclick="answerSelected(true)">A) Doğru Seçenek Örneği</button>
-        <button class="opt-btn" onclick="answerSelected(false)">B) Yanlış Seçenek</button>
-        <button class="opt-btn" onclick="answerSelected(false)">C) Yanlış Seçenek</button>
-        <button class="opt-btn" onclick="answerSelected(false)">D) Yanlış Seçenek</button>
-      `;
-      document.getElementById('modalOptions').innerHTML = optionsHTML;
-      document.getElementById('questionModal').style.display = 'flex';
-      btnElement.classList.add('used');
-      btnElement.disabled = true;
-    }
-
-    function closeModal() {
-      document.getElementById('questionModal').style.display = 'none';
-      currentTurn = currentTurn === 1 ? 2 : 1;
-      let t1Name = "Birinci Takım";
-      let t2Name = "İkinci Takım";
-      document.getElementById('currentTurnBadge').textContent = "Sıra: " + (currentTurn === 1 ? t1Name : t2Name);
-    }
-
-    function answerSelected(isCorrect) {
-      if(isCorrect) {
-        alert("Tebrikler! Doğru cevap 🎉 Puan eklendi.");
-        updateScore(currentTurn, 200);
-      } else {
-        alert("Üzgünüz, yanlış cevap! Sıra diğer takıma geçti.");
-      }
-      closeModal();
-    }
-  </script>
+  document.getElementById("form").onsubmit = e => {
+    e.preventDefault();
+    msg.className = "lg-msg";
+    if (!/^\S+@\S+\.\S+$/.test(email.value)) { msg.textContent = "Geçerli bir e-posta gir."; email.focus(); return; }
+    if (pass.value.length < 6) { msg.textContent = "Şifre en az 6 karakter olmalı."; pass.focus(); return; }
+    msg.className = "lg-msg ok";
+    msg.textContent = "Giriş özelliği çok yakında aktif olacak.";
+  };
+</script>
 </body>
 </html>

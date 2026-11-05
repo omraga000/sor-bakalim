@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sor Bakalım - Oyun Alanı</title>
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/game.css">
 </head>
 <body class="game-body">
 
-  <!-- شاشة التحميل -->
   <div id="loadingScreen" class="loading-overlay">
     <div class="loader-content">
       <div class="spinner"></div>
@@ -18,12 +16,11 @@
     </div>
   </div>
 
-  <!-- الشريط العلوي للتحكم -->
   <header class="game-topbar">
     <div class="topbar-left">
       <button class="control-btn exit-btn" onclick="location.href='index.html'">🚪 Çıkış</button>
       <button class="control-btn" onclick="location.href='index.html'">🏠 Ana Sayfa</button>
-      <button class="control-btn finish-btn">🏁 Oyunu Bitir</button>
+      <button class="control-btn finish-btn" onclick="finishGame()">🏁 Oyunu Bitir</button>
     </div>
     <div class="topbar-center">
       <span class="game-room-title" id="roomTitle">Sor Bakalım - Özel Maç</span>
@@ -33,154 +30,45 @@
     </div>
   </header>
 
-  <!-- لوحة اللعبة الوسطى (تم تحديثها لتشمل سؤالين لكل فئة لكل قيمة: 200, 200, 400, 400, 600, 600) -->
   <main class="game-main-container">
     <div class="board-grid" id="boardGrid"></div>
   </main>
 
-  <!-- الشريط السفلي للفرق (مع إصلاح ظهور أزرار + و - بوضوح تام) -->
   <footer class="game-footer-bar">
-    <!-- الفريق الأول -->
     <div class="team-panel team-one">
       <div class="team-info">
         <span class="team-name" id="displayTeam1">Birinci Takım</span>
         <div class="score-box">
-          <button class="score-btn minus" onclick="updateScore(1, -200)">-</button>
+          <button class="score-btn minus" onclick="adjust(0, -100)">-</button>
           <span class="score-value" id="score1">0</span>
-          <button class="score-btn plus" onclick="updateScore(1, 200)">+</button>
+          <button class="score-btn plus" onclick="adjust(0, 100)">+</button>
         </div>
       </div>
-      <div class="lifelines-bar">
-        <span class="lifeline-icon" title="Çift Cevap">✌️</span>
-        <span class="lifeline-icon" title="Telefonla Joker">📞</span>
-        <span class="lifeline-icon" title="Çukur / Tuzak">💣</span>
-      </div>
+      <div class="lifelines-bar" id="lifes1"></div>
     </div>
 
-    <!-- رسالة التوجيه المركزية -->
     <div class="game-status-msg" id="gameStatusMsg">
       Bir kategori ve puan seçerek yarışmayı başlatın! 🎮
     </div>
 
-    <!-- الفريق الثاني -->
     <div class="team-panel team-two">
-      <div class="lifelines-bar">
-        <span class="lifeline-icon" title="Çift Cevap">✌️</span>
-        <span class="lifeline-icon" title="Telefonla Joker">📞</span>
-        <span class="lifeline-icon" title="Çukur / Tuzak">💣</span>
-      </div>
+      <div class="lifelines-bar" id="lifes2"></div>
       <div class="team-info">
         <span class="team-name" id="displayTeam2">İkinci Takım</span>
         <div class="score-box">
-          <button class="score-btn minus" onclick="updateScore(2, -200)">-</button>
+          <button class="score-btn minus" onclick="adjust(1, -100)">-</button>
           <span class="score-value" id="score2">0</span>
-          <button class="score-btn plus" onclick="updateScore(2, 200)">+</button>
+          <button class="score-btn plus" onclick="adjust(1, 100)">+</button>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- نافذة عرض السؤال المنبثقة -->
   <div id="questionModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-      <h3 id="modalCategoryTitle">Kategori Adı</h3>
-      <div class="modal-points" id="modalPoints">200 Puan</div>
-      <div class="modal-question-text" id="modalQuestionText">Soru metni buraya gelecek...</div>
-      <div class="modal-options" id="modalOptions"></div>
-      <button class="modal-close-btn" onclick="closeModal()">Kapat</button>
-    </div>
+    <div class="modal-card" id="modalCard"></div>
   </div>
 
-  <script>
-    window.onload = () => {
-      setTimeout(() => {
-        document.getElementById('loadingScreen').style.opacity = '0';
-        setTimeout(() => {
-          document.getElementById('loadingScreen').style.display = 'none';
-        }, 500);
-      }, 1000);
-    };
-
-    const defaultCategories = [
-      { id: "dizi", name: "Dizi ve Film", emoji: "🎬" },
-      { id: "yemek", name: "Türk Mutfağı", emoji: "🍢" },
-      { id: "tarih", name: "Tarih ve Kültür", emoji: "🏛️" },
-      { id: "spor", name: "Spor", emoji: "⚽" },
-      { id: "muzik", name: "Müzik", emoji: "🎵" },
-      { id: "genel", name: "Genel Kültür", emoji: "💡" }
-    ];
-
-    let scores = { 1: 0, 2: 0 };
-    let currentTurn = 1;
-    let activeQuestionPoints = 200;
-
-    function updateScore(team, amount) {
-      scores[team] = Math.max(0, scores[team] + amount);
-      document.getElementById(`score${team}`).textContent = scores[team];
-    }
-
-    const boardGrid = document.getElementById('boardGrid');
-    
-    // النظام الجديد للأسئلة لكل فئة: 200, 200, 400, 400, 600, 600
-    const pointsList = [200, 200, 400, 400, 600, 600];
-
-    defaultCategories.forEach(cat => {
-      let col = document.createElement('div');
-      col.className = 'board-column';
-      
-      let headerHTML = `
-        <div class="column-header">
-          <span class="cat-icon">${cat.emoji}</span>
-          <span class="cat-title">${cat.name}</span>
-        </div>
-      `;
-      
-      let buttonsHTML = '<div class="tiles-container">';
-      pointsList.forEach((pts, index) => {
-        buttonsHTML += `<button class="point-tile" onclick="openQuestion('${cat.name}', ${pts}, this)">${pts}</button>`;
-      });
-      buttonsHTML += '</div>';
-
-      col.innerHTML = headerHTML + buttonsHTML;
-      boardGrid.appendChild(col);
-    });
-
-    function openQuestion(catName, pts, btnElement) {
-      activeQuestionPoints = pts;
-      document.getElementById('modalCategoryTitle').textContent = catName;
-      document.getElementById('modalPoints').textContent = pts + " Puan";
-      document.getElementById('modalQuestionText').textContent = `${catName} kategorisinden ${pts} puanlık harika bir soru yakında burada olacak!`;
-      
-      let optionsHTML = `
-        <button class="opt-btn" onclick="answerSelected(true)">A) Doğru Seçenek Örneği</button>
-        <button class="opt-btn" onclick="answerSelected(false)">B) Yanlış Seçenek</button>
-        <button class="opt-btn" onclick="answerSelected(false)">C) Yanlış Seçenek</button>
-        <button class="opt-btn" onclick="answerSelected(false)">D) Yanlış Seçenek</button>
-      `;
-      document.getElementById('modalOptions').innerHTML = optionsHTML;
-      document.getElementById('questionModal').style.display = 'flex';
-      
-      btnElement.classList.add('used');
-      btnElement.disabled = true;
-    }
-
-    function closeModal() {
-      document.getElementById('questionModal').style.display = 'none';
-      currentTurn = currentTurn === 1 ? 2 : 1;
-      let t1Name = "Birinci Takım";
-      let t2Name = "İkinci Takım";
-      document.getElementById('currentTurnBadge').textContent = "Sıra: " + (currentTurn === 1 ? t1Name : t2Name);
-    }
-
-    function answerSelected(isCorrect) {
-      if(isCorrect) {
-        alert(`Tebrikler! Doğru cevap 🎉 +${activeQuestionPoints} Puan eklendi.`);
-        updateScore(currentTurn, activeQuestionPoints);
-      } else {
-        alert("Üzgünüz, yanlış cevap! Sıra diğer takıma geçti.");
-      }
-      closeModal();
-    }
-  </script>
+  <script src="js/questions.js"></script>
+  <script src="js/game.js"></script>
 </body>
 </html>
