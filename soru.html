@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soru · Sor Bakalım</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="game-body">
+
+  <header class="game-topbar">
+    <div class="topbar-left">
+      <button class="control-btn exit-btn" onclick="location.href='index.html'">🚪 Çıkış</button>
+      <button class="control-btn" onclick="location.href='game.html'">🔲 Tahtaya Dön</button>
+      <button class="control-btn finish-btn" onclick="location.href='game.html?finish=1'">🏁 Oyunu Bitir</button>
+    </div>
+    <div class="topbar-center">
+      <span class="game-room-title" id="roomTitle">Sor Bakalım</span>
+    </div>
+    <div class="topbar-right">
+      <div class="turn-badge" id="currentTurnBadge">Sıra: Birinci Takım</div>
+    </div>
+  </header>
+
+  <main class="q-wrap">
+    <section class="q-frame" id="frame"></section>
+    <aside class="q-side" id="side"></aside>
+  </main>
+
+  <script>
+    // dosya eksik veya hatalıysa sebebi ekranda göster
+    function showFatal(text) {
+      var f = document.getElementById("frame");
+      if (f && !f.children.length) f.innerHTML = '<div class="fatal">⚠️ ' + text + '</div>';
+    }
+    window.addEventListener("error", function (e) {
+      if (e.target && e.target.tagName === "SCRIPT") showFatal("Dosya bulunamadı: " + e.target.getAttribute("src"));
+      else showFatal("Hata: " + e.message + " — " + String(e.filename || "").split("/").pop() + " satır " + e.lineno);
+    }, true);
+  </script>
+  <script src="js/questions.js"></script>
+  <script src="js/soru.js"></script>
+</body>
+</html>

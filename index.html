@@ -61,13 +61,13 @@
               <div class="rule-card">
                   <div class="rule-icon">🏆</div>
                   <h3>3. Puanlama ve Yarış</h3>
-                  <p>Doğru cevaplar puanı hanenize yazdırır. Yanlış cevaplarda ise sıra rakibe geçer. En yüksek puanı toplayan oyunun galibi olur!</p>
+                  <p>Takımlar cevabını kendi aralarında söyler. Cevap gösterilince doğru bilen takım sorunun puanını alır. Kimse bilemezse puan yok, sıra diğer takıma geçer. En yüksek puanı toplayan takım kazanır!</p>
               </div>
               
               <div class="rule-card">
                   <div class="rule-icon">💡</div>
                   <h3>4. Joker Hakları</h3>
-                  <p>Tıkanıp kaldığınız anlarda "50/50" (iki yanlış şıkkı eleme) veya "Sunucuya Sor" gibi joker haklarınızı akıllıca kullanarak zorlukları aşabilirsiniz.</p>
+                  <p>Oyuna başlamadan önce her takım kullanmak istediği joker haklarını seçer: Cevabı İkiye Katla, Telefonla Joker, Çukur, Dinlen ve Tuzak. Jokerleri akıllıca kullanarak rakibin önüne geç!</p>
               </div>
           </div>
       </div>
@@ -310,8 +310,30 @@
     $("generatedTeamsResult").style.display = "block";
   };
 
-  // شاشة التحميل والانتقال إلى صفحة اللعبة
+  // الانتقال إلى اللعبة: يحفظ الإعدادات ثم يفتح game.html
   function startLoadingAndRedirect() {
+    if (picked.length < MIN) {
+      $("note").textContent = "Önce en az " + MIN + " kategori seç.";
+      document.getElementById("oyun").scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    const lifelines = { 1: [], 2: [] };
+    document.querySelectorAll(".lifeline-btn.sel").forEach(b => lifelines[b.dataset.team].push(b.dataset.lifeline));
+
+    const setup = {
+      gameName: $("gameName").value.trim() || "Özel Maç",
+      team1: $("team1Name").value.trim() || "Birinci Takım",
+      team2: $("team2Name").value.trim() || "İkinci Takım",
+      cats: picked.slice(),
+      lifelines: lifelines
+    };
+    try {
+      localStorage.setItem("setup", JSON.stringify(setup));
+      localStorage.setItem("cats", JSON.stringify(picked));
+      localStorage.removeItem("game");            // yeni oyun: eski puanları sil
+    } catch (e) {}
+
     const loader = document.createElement('div');
     loader.className = 'loading-overlay';
     loader.innerHTML = `
