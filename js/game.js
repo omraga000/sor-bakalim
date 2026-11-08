@@ -19,7 +19,7 @@ const CATS = ids.map(id => ({ id, ...QUESTIONS[id] }));
 const NAMES = [setup.team1 || "Birinci Takım", setup.team2 || "İkinci Takım"];
 const TOTAL = CATS.reduce((n, c) => n + c.items.length, 0);
 
-/* ---------- oyun durumu (sayfalar arasında localStorage'da saklanır) ---------- */
+/* ---------- oyun durumu ---------- */
 const state = (() => {
   try {
     const g = JSON.parse(localStorage.getItem("game"));
@@ -30,7 +30,10 @@ const state = (() => {
 const save = () => { try { localStorage.setItem("game", JSON.stringify(state)); } catch (e) {} };
 const usedCount = () => CATS.reduce((n, c) => n + c.items.filter((_, i) => state.used[c.id + "-" + i]).length, 0);
 
-/* ---------- ekran ---------- */
+// İlk açılışta state'i kaydet (soru.html 'game' null hatası alıp geri dönmesin)
+save();
+
+/* ---------- ekran render ---------- */
 function renderBoard() {
   $("boardGrid").innerHTML = CATS.map(c => `
     <div class="board-column">
@@ -64,25 +67,48 @@ function finishGame() {
   const [a, b] = state.score;
   const result = a === b ? "Berabere! 🤝" : "Kazanan: " + NAMES[a > b ? 0 : 1] + " 🏆";
   $("modalCard").innerHTML = `
-    <h3>Oyun sonucu</h3>
+    <h3>Oyun Sonucu</h3>
     <div class="final-scores">
       <div>${esc(NAMES[0])}<b>${a}</b></div>
       <div>${esc(NAMES[1])}<b>${b}</b></div>
     </div>
     <div class="reveal">${result}</div>
     <div class="row-btns">
-      <button class="modal-close-btn" id="backBtn">Oyuna dön</button>
-      <button class="primary-btn" id="homeBtn">Ana sayfa</button>
+      <button class="modal-close-btn" id="backBtn">Oyuna Dön</button>
+      <button class="primary-btn" id="homeBtn">Ana Sayfa</button>
     </div>`;
   $("backBtn").onclick = closeModal;
   $("homeBtn").onclick = () => { location.href = "index.html"; };
   $("questionModal").style.display = "flex";
 }
 
-/* ---------- başlangıç ---------- */
+/* ---------- Başlangıç ---------- */
 $("roomTitle").textContent = "Sor Bakalım - " + (setup.gameName || "Özel Maç");
 $("displayTeam1").textContent = NAMES[0];
 $("displayTeam2").textContent = NAMES[1];
+
 [1, 2].forEach(t => {
   const list = (setup.lifelines && setup.lifelines[t]) || [];
-  $("lifes" + t).innerHTML =
+  $("lifes" + t).innerHTML = list.filter(k => LIFE[k])
+    .map(k => `<span class="lifeline-icon" title="${LIFE[k].name}">${LIFE[k].icon}</span>`).join("");
+});
+
+if (state.msg && $("gameStatusMsg")) {
+  $("gameStatusMsg").textContent = state.msg;
+}
+
+renderBoard();
+refreshBar();
+
+// Yükleme ekranını kaldır
+const loader = $("loadingScreen");
+if (loader) {
+  loader.style.opacity = "0";
+  setTimeout(() => { loader.style.display = "none"; }, 500);
+}
+
+// Oyunu bitir parametresi veya tüm soruların bitmesi kontrolü
+const params = new URLSearchParams(location.search);
+if (params.get("finish") === "1" || (TOTAL > 0 && usedCount() === TOTAL)) {
+  finishGame();
+}
