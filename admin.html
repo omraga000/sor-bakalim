@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sor Bakalım - Yönetim Paneli</title>
+  <link rel="icon" type="image/png" href="img/logo.png">
+
+  <!-- Google Fonts: Outfit (Brand & Numbers) & Plus Jakarta Sans (Modern UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Admin Custom Stylesheet (Warm Sunset Palette) -->
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       TOPBAR & BRANDING HEADER (Clickable link back to index.html)
+       ========================================================================== -->
+  <header class="admin-header">
+    <div class="header-container">
+      <!-- Clickable Home Link to index.html with Brand Mascot & Typography -->
+      <a href="index.html" class="brand-link" title="Ana Sayfaya ve Oyuna Dön">
+        <img src="img/logo.png" alt="Sor Bakalım Logo" class="brand-logo-img">
+        <div class="brand-title-wrap">
+          <span class="brand-title">Sor Bakalım <span>🎯</span></span>
+          <span class="brand-subtitle">Yönetim &amp; Soru Paneli</span>
+        </div>
+      </a>
+
+      <!-- Quick Action Buttons in Top Header -->
+      <div class="header-actions">
+        <a href="#kategoriBolumu" class="btn btn-secondary btn-sm" title="Kategori Yönetimine Git">
+          🏷️ Kategoriler
+        </a>
+        <a href="#soruFormuBolumu" class="btn btn-primary btn-sm" id="quickAddBtn" title="Yeni Soru Ekle">
+          ➕ Soru Ekle
+        </a>
+        <button type="button" class="btn btn-secondary btn-sm" id="exportJsonBtn" title="Tüm verileri JSON dosyası olarak indir">
+          📥 Dışa Aktar
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" id="resetDataBtn" title="Varsayılan orijinal sorulara ve kategorilere sıfırla">
+          🔄 Sıfırla
+        </button>
+        <a href="index.html" class="btn btn-secondary btn-sm" title="Oyuncu ana sayfasına dön">
+          🏠 Ana Sayfa
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN ADMIN DASHBOARD CONTAINER
+       ========================================================================== -->
+  <main class="admin-container">
+
+    <!-- ==========================================================================
+         TOP DASHBOARD / STATISTICS OVERVIEW (Cards Layout)
+         ========================================================================== -->
+    <section class="stats-overview-section" aria-label="İstatistik Özeti">
+      <div class="stats-grid">
+
+        <!-- Stat Card 1: Toplam Ziyaretçi (Total Visitors) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Toplam Ziyaretçi</span>
+            <div class="stat-icon icon-visitors">👥</div>
+          </div>
+          <div class="stat-value" id="statVisitors">0</div>
+          <div class="stat-footer">
+            <span class="stat-badge badge-growth">↗ %14.8</span>
+            <span>Son 30 gündeki site ziyareti</span>
+          </div>
+        </div>
+
+        <!-- Stat Card 2: Toplam Oynanan Oyun (Total Games Played) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Toplam Oynanan Oyun</span>
+            <div class="stat-icon icon-games">🎮</div>
+          </div>
+          <div class="stat-value" id="statGamesPlayed">0</div>
+          <div class="stat-footer">
+            <span class="stat-badge badge-fire">🔥 Canlı</span>
+            <span>Tamamlanan iki takımlı maçlar</span>
+          </div>
+        </div>
+
+        <!-- Stat Card 3: Toplam Kategori Sayısı (Total Categories) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Aktif Kategoriler</span>
+            <div class="stat-icon" style="background: rgba(249, 115, 22, 0.15); color: var(--primary-orange);">🏷️</div>
+          </div>
+          <div class="stat-value" id="statTotalCategories">0</div>
+          <div class="stat-footer">
+            <span class="stat-badge badge-growth">Oyun Alanında Aktif</span>
+            <span>Seçilebilir kategori sayısı</span>
+          </div>
+        </div>
+
+        <!-- Stat Card 4: Toplam Soru Havuzu (Total Questions) -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Aktif Soru Havuzu</span>
+            <div class="stat-icon icon-questions">💡</div>
+          </div>
+          <div class="stat-value" id="statTotalQuestions">0</div>
+          <div class="stat-footer">
+            <span class="stat-badge badge-growth">Yayında</span>
+            <span>Yarışmaya hazır soru adedi</span>
+          </div>
+        </div>
+
+        <!-- Stat Card Wide: En Çok Oynanan Kategoriler (Most Played Categories) -->
+        <div class="stat-card-wide">
+          <div class="categories-leaderboard-header">
+            <h2 class="section-label">
+              <span>🏆</span> En Çok Oynanan Kategoriler
+            </h2>
+            <span style="font-size: 0.82rem; color: var(--text-dim);">
+              Takımların en çok tercih ettiği konu başlıkları
+            </span>
+          </div>
+          
+          <!-- Dynamic Ranking Grid -->
+          <div class="categories-ranking-grid" id="categoriesRankingGrid">
+            <!-- Populated via admin.js -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 1: KATEGORİ YÖNETİMİ (CATEGORY MANAGEMENT)
+         ========================================================================== -->
+    <section class="category-mgmt-section" id="kategoriBolumu" aria-label="Kategori Yönetimi">
+      <div class="section-header-wrap">
+        <div>
+          <h2 class="section-main-title">
+            <span>🏷️</span> Kategori Yönetimi
+          </h2>
+          <p class="section-subtitle">
+            Yarışma kategorilerini yönetin. Bir kategori silindiğinde o kategoriye ait tüm sorular da otomatik temizlenir ve oyun ekranından anında kaldırılır.
+          </p>
+        </div>
+        <span class="table-count-badge" id="categoryCountBadge">0 Kategori</span>
+      </div>
+
+      <div class="category-mgmt-grid">
+
+        <!-- Form: Yeni Kategori Ekle -->
+        <div class="form-card">
+          <div class="form-title-wrap">
+            <h3 class="form-title">
+              ➕ Yeni Kategori Ekle
+            </h3>
+          </div>
+
+          <form id="categoryForm" novalidate autocomplete="off">
+            <!-- Kategori Adı -->
+            <div class="form-group">
+              <label class="form-label" for="categoryNameInput">
+                <span>Kategori Adı</span>
+                <span class="req">*</span>
+              </label>
+              <input type="text" class="form-control" id="categoryNameInput" placeholder="Örn: Türk Futbolu, Mitoloji..." required>
+            </div>
+
+            <!-- Kategori Emoji / İkonu -->
+            <div class="form-group">
+              <label class="form-label" for="categoryEmojiInput">
+                <span>Kategori Emojisi / İkonu</span>
+                <span class="req">*</span>
+              </label>
+              <input type="text" class="form-control" id="categoryEmojiInput" placeholder="Örn: ⚽, 🏛️, 🚀..." maxlength="5" value="🎯" required>
+              
+              <!-- Hızlı Emoji Seçici -->
+              <div class="emoji-quick-row">
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🏛️')">🏛️</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🗺️')">🗺️</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🍢')">🍢</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('⚽')">⚽</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🎭')">🎭</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('💡')">💡</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🦁')">🦁</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('💻')">💻</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🎵')">🎵</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🎬')">🎬</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🌆')">🌆</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('📜')">📜</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🚀')">🚀</button>
+                <button type="button" class="emoji-pill-btn" onclick="window.SorBakalimAdmin.setCategoryEmoji('🔬')">🔬</button>
+              </div>
+            </div>
+
+            <!-- Kategori Açıklaması -->
+            <div class="form-group">
+              <label class="form-label" for="categoryInfoInput">
+                <span>Kategori Açıklaması / Bilgi</span>
+                <span class="req">*</span>
+              </label>
+              <textarea class="form-control" id="categoryInfoInput" rows="2" placeholder="Örn: Süper Lig, milli maçlar ve futbol efsaneleri..." required></textarea>
+            </div>
+
+            <!-- Görsel URL'si (Opsiyonel) -->
+            <div class="form-group">
+              <label class="form-label" for="categoryImgInput">
+                <span>Görsel URL'si (Opsiyonel)</span>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">https://...</span>
+              </label>
+              <input type="url" class="form-control" id="categoryImgInput" placeholder="https://example.com/kategori-kapak.jpg">
+            </div>
+
+            <!-- Düğmeler -->
+            <div class="form-buttons">
+              <button type="submit" class="btn btn-primary" id="saveCategoryBtn">
+                💾 Kategoriyi Kaydet
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Kayıtlı Kategoriler Kart Listesi -->
+        <div class="table-card" style="padding: 1.5rem;">
+          <div style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #FFFFFF;">
+              Mevcut Kategoriler
+            </h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">
+              Kart üzerinden silebilirsiniz
+            </span>
+          </div>
+
+          <div class="category-cards-grid" id="categoryCardsGrid">
+            <!-- Populated via admin.js -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         SECTION 2: QUESTION MANAGEMENT SYSTEM (CRUD)
+         Form & Table Split Layout
+         ========================================================================== -->
+    <section class="question-mgmt-section" id="soruFormuBolumu" aria-label="Soru Yönetimi">
+      <div class="section-header-wrap">
+        <div>
+          <h2 class="section-main-title">
+            <span>❓</span> Soru Yönetim Sistemi
+          </h2>
+          <p class="section-subtitle">
+            Soruları ekleyin, güncelleyin veya kaldırın. Tüm değişiklikler anında oyun alanına (game.html / index.html) yansır.
+          </p>
+        </div>
+      </div>
+
+      <div class="admin-content-grid">
+
+        <!-- ======================================================================
+             LEFT COLUMN: "Yeni Soru Ekle / Düzenle" Form
+             ====================================================================== -->
+        <aside class="form-card" id="formCard">
+          <div class="form-title-wrap">
+            <h3 class="form-title" id="formTitle">
+              ➕ Yeni Soru Ekle
+            </h3>
+            <span class="edit-badge-indicator" id="editBadgeIndicator">Düzenleme Modu</span>
+          </div>
+
+          <form id="questionForm" novalidate autocomplete="off">
+            <input type="hidden" id="questionIdInput" value="">
+
+            <!-- Kategori Seçimi (Dinamik olarak localStorage'dan çekilir) -->
+            <div class="form-group">
+              <label class="form-label" for="categorySelect">
+                <span>Kategori</span>
+                <span class="req">*</span>
+              </label>
+              <select class="form-control" id="categorySelect" required>
+                <option value="" disabled selected>Kategori Yükleniyor...</option>
+                <!-- Dinamik olarak admin.js ile doldurulur -->
+              </select>
+              <div style="margin-top: 0.35rem; font-size: 0.78rem; text-align: right;">
+                <a href="#kategoriBolumu" style="color: var(--primary-orange); text-decoration: none; font-weight: 600;">
+                  + Yeni Kategori Oluştur
+                </a>
+              </div>
+            </div>
+
+            <!-- Puan & Zorluk Derecesi Seçici (200, 400, 600 Puan) -->
+            <div class="form-group">
+              <label class="form-label">
+                <span>Puan / Zorluk</span>
+                <span class="req">*</span>
+              </label>
+              <div class="points-selector">
+                <label class="point-option">
+                  <input type="radio" name="points" value="200" checked>
+                  <div class="point-label">
+                    <span class="pts">200</span>
+                    <span class="diff-name">Kolay</span>
+                  </div>
+                </label>
+
+                <label class="point-option">
+                  <input type="radio" name="points" value="400">
+                  <div class="point-label">
+                    <span class="pts">400</span>
+                    <span class="diff-name">Orta</span>
+                  </div>
+                </label>
+
+                <label class="point-option">
+                  <input type="radio" name="points" value="600">
+                  <div class="point-label">
+                    <span class="pts">600</span>
+                    <span class="diff-name">Zor</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Soru Metni (Türkçe Karakter Desteği: ç, ğ, ı, İ, ö, ş, ü) -->
+            <div class="form-group">
+              <label class="form-label" for="questionTextInput">
+                <span>Soru Metni</span>
+                <span class="req">*</span>
+              </label>
+              <textarea class="form-control" id="questionTextInput" rows="3" placeholder="Örn: 2000 yılında UEFA Kupası'nı kazanan Türk kulübü hangisidir?" required></textarea>
+            </div>
+
+            <!-- Doğru Cevap -->
+            <div class="form-group">
+              <label class="form-label" for="answerInput">
+                <span>Doğru Cevap</span>
+                <span class="req">*</span>
+              </label>
+              <input type="text" class="form-control" id="answerInput" placeholder="Örn: Galatasaray" required>
+            </div>
+
+            <!-- İsteğe Bağlı Görsel URL'si (Görsel Destekli Sorular İçin) -->
+            <div class="form-group">
+              <label class="form-label" for="imageUrlInput">
+                <span>Görsel URL'si (Opsiyonel)</span>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">https://...</span>
+              </label>
+              <input type="url" class="form-control" id="imageUrlInput" placeholder="https://example.com/resim.jpg">
+              <div class="image-preview-wrap" id="imagePreviewWrap">
+                <img src="" alt="Görsel Önizleme" class="image-preview-img" id="imagePreviewImg">
+              </div>
+            </div>
+
+            <!-- Form İşlem Düğmeleri -->
+            <div class="form-buttons">
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                💾 Kaydet
+              </button>
+              <button type="button" class="btn btn-secondary" id="cancelEditBtn">
+                İptal
+              </button>
+              <button type="button" class="btn btn-secondary" id="resetFormBtn" title="Formu temizle">
+                Temizle
+              </button>
+            </div>
+          </form>
+        </aside>
+
+        <!-- ======================================================================
+             RIGHT COLUMN: Questions Table / List View
+             ====================================================================== -->
+        <section class="table-card" id="soruHavuzuBolumu" aria-label="Soru Listesi">
+
+          <!-- Table Header & Filters -->
+          <div class="table-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <h3 class="table-title">
+                <span>📋</span> Soru Havuzu
+              </h3>
+              <span class="table-count-badge" id="tableCountBadge">0 Soru</span>
+            </div>
+          </div>
+
+          <!-- Filter & Search Toolbar -->
+          <div class="filters-bar">
+            <!-- Live Search Bar -->
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="form-control" id="searchInput" placeholder="Soru metni, cevap veya kategoride ara...">
+            </div>
+
+            <!-- Filter by Category -->
+            <select class="form-control filter-select" id="filterCategory">
+              <option value="all">Tüm Kategoriler</option>
+            </select>
+
+            <!-- Filter by Difficulty Points -->
+            <select class="form-control filter-select" id="filterPoints">
+              <option value="all">Tüm Puanlar</option>
+              <option value="200">200 Puan (Kolay)</option>
+              <option value="400">400 Puan (Orta)</option>
+              <option value="600">600 Puan (Zor)</option>
+            </select>
+          </div>
+
+          <!-- Responsive Questions Table -->
+          <div class="table-responsive">
+            <table class="questions-table" id="questionsTable">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">ID</th>
+                  <th style="width: 140px;">Kategori</th>
+                  <th>Soru Metni</th>
+                  <th style="width: 110px;">Puan</th>
+                  <th style="width: 180px;">Doğru Cevap</th>
+                  <th style="width: 150px; text-align: right;">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="questionsTableBody">
+                <!-- Dinamik olarak admin.js tarafından oluşturulur -->
+              </tbody>
+            </table>
+
+            <!-- Empty State (No Questions Matching Filter) -->
+            <div class="table-empty-state" id="tableEmptyState" style="display: none;">
+              <div class="empty-icon">📭</div>
+              <div class="empty-title">Kriterlere Uygun Soru Bulunamadı</div>
+              <p class="empty-desc">Arama filtrenizi temizleyebilir veya soldaki formdan yeni bir soru ekleyebilirsiniz.</p>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       CATEGORY DELETE CONFIRMATION MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="deleteCategoryModal" role="dialog" aria-modal="true" aria-labelledby="delCatModalTitle">
+    <div class="modal-content">
+      <div class="modal-icon-badge">⚠️</div>
+      <h3 class="modal-title" id="delCatModalTitle">Kategoriyi Sil</h3>
+      <p class="modal-desc" id="delCatModalDesc">
+        Bu kategoriyi silmek istediğinize emin misiniz?
+      </p>
+      <div id="delCatWarningBox" style="font-weight: 600; color: #EF4444; font-size: 0.88rem; background: rgba(239, 68, 68, 0.1); padding: 0.85rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.25);">
+        ⚠️ DİKKAT: Bu kategoriyi sildiğinizde, bu kategoriye ait TÜM sorular da otomatik olarak sistemden ve oyundan silinecektir!
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteCategoryBtn">Vazgeç</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteCategoryBtn">Kategoriyi ve Soruları Sil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       QUESTION DELETE CONFIRMATION MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal-content">
+      <div class="modal-icon-badge">🗑️</div>
+      <h3 class="modal-title" id="deleteModalTitle">Soruyu Sil</h3>
+      <p class="modal-desc">
+        Bu soruyu sistemden ve oyundan kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+      </p>
+      <div id="deleteModalQuestionText" style="font-weight: 600; color: #FFFFFF; font-size: 0.9rem; background: rgba(0,0,0,0.25); padding: 0.75rem; border-radius: 8px; border-left: 3px solid var(--accent-red);"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Vazgeç</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Evet, Sil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       IMAGE PREVIEW MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="imageModal" role="dialog" aria-modal="true">
+    <div class="modal-content img-modal-content">
+      <img src="" alt="Soru Görseli" id="modalPreviewPic" class="img-modal-pic">
+      <button type="button" class="btn btn-secondary" id="closeImageModalBtn" style="width: 100%;">Kapat</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       TOAST NOTIFICATION CONTAINER
+       ========================================================================== -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- ==========================================================================
+       FOOTER
+       ========================================================================== -->
+  <footer class="admin-footer">
+    <p>Sor Bakalım © İki Takımlı Bilgi Yarışması · <a href="index.html">Oyuna Dön</a></p>
+  </footer>
+
+  <!-- Central Questions Database & Storage Engine -->
+  <script src="js/questions.js"></script>
+
+  <!-- Admin JavaScript Logic -->
+  <script src="js/admin.js"></script>
+</body>
+</html>

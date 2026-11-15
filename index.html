@@ -17,6 +17,7 @@
     <a class="logo" href="index.html"><img src="img/logo.png" alt="Sor Bakalım" class="logo-img">Sor Bakalım</a>
     <a class="play on" href="#oyun">Oyna</a>
     <a class="link" href="iletisim.html">İletişim</a>
+    <a class="link" href="admin.html">Yönetim</a>
     <div class="auth">
       <a href="giris.html">Giriş Yap</a>
       <span class="sep"></span>
@@ -181,10 +182,27 @@
 
 </main>
 
+<script src="js/questions.js"></script>
+
 <script>
   const MAX = 6, MIN = 2;
 
-  const CATS = [
+  // SADECE ve KESİNLİKLE localStorage üzerinden okunur; boşsa ([]) kesinlikle boş döner
+  const CATS = (function() {
+    try {
+      const raw = localStorage.getItem("sorBakalimCategories");
+      if (raw !== null) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    if (typeof getStoredCategories === "function") {
+      return getStoredCategories();
+    }
+    return [];
+  })();
+  /* Eski statik liste tamamen devre dışı bırakıldı
+  const _UNUSED = [
     { id: "tarih",    name: "Tarih",             emoji: "🏛️", img: "", info: "Osmanlı’dan Cumhuriyet’e tarih soruları" },
     { id: "cografya", name: "Coğrafya",          emoji: "🗺️", img: "", info: "Şehirler, dağlar, nehirler" },
     { id: "yemek",    name: "Yemek",             emoji: "🍢", img: "", info: "Türk mutfağı ve lezzetler" },
@@ -197,7 +215,7 @@
     { id: "dizi",     name: "Dizi ve Film",      emoji: "🎬", img: "", info: "Türk dizileri ve filmleri" },
     { id: "sehir",    name: "Şehirler",          emoji: "🌆", img: "", info: "81 ilimiz hakkında sorular" },
     { id: "atasozu",  name: "Atasözleri",        emoji: "📜", img: "", info: "Atasözleri ve deyimler" }
-  ];
+  ]; */
 
   let picked = [];
   try {
@@ -207,13 +225,13 @@
 
   const $ = id => document.getElementById(id);
 
-  $("cards").innerHTML = CATS.map(c => `
+  $("cards").innerHTML = CATS.length ? CATS.map(c => `
     <button class="card" data-id="${c.id}" aria-pressed="false">
       <span class="info" title="${c.info}">i</span>
       <span class="tick">✓</span>
       <span class="card-pic">${c.img ? `<img src="${c.img}" alt="${c.name}">` : c.emoji}</span>
       <span class="card-name">${c.name}</span>
-    </button>`).join("");
+    </button>`).join("") : '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748B;">Aktif kategori bulunamadı. <a href="admin.html" style="color: #F97316; font-weight: 700;">Yönetim Paneli</a>nden yeni kategori ekleyebilirsiniz.</div>';
 
   function refresh() {
     document.querySelectorAll(".card").forEach(b => {

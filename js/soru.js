@@ -25,6 +25,10 @@ const NAMES = [setup.team1 || "Birinci Takım", setup.team2 || "İkinci Takım"]
 let secs = TIME, paused = false, view = "q";
 
 function start() {
+  if (!cat || !item) {
+    showFatal("Soru veya kategori bulunamadı! Yönetim panelinden silinmiş olabilir.");
+    return;
+  }
   $("roomTitle").textContent = "Sor Bakalım - " + (setup.gameName || "Özel Maç");
   $("currentTurnBadge").textContent = "Sıra: " + NAMES[game.turn];
   renderSide();
@@ -69,6 +73,7 @@ function showQuestion() {
       <button id="tReset" title="Sıfırla">↻</button>
     </div>
     <div class="q-pts">${item.p} Puan</div>
+    ${item.img ? `<div style="text-align:center;margin:10px 0;"><img src="${esc(item.img)}" alt="Görsel" style="max-height:220px;max-width:90%;border-radius:12px;object-fit:cover;box-shadow:0 4px 15px rgba(0,0,0,0.4);"></div>` : ''}
     <div class="q-text">${esc(item.q)}</div>
     <button class="q-btn q-green q-left" id="toAns">Cevap</button>
     <div class="q-btn q-tag q-right">${esc(cat.name)}</div>`;
@@ -83,6 +88,7 @@ function showAnswer() {
   view = "a";
   $("frame").innerHTML = `
     <div class="q-pts">${item.p} Puan</div>
+    ${item.img ? `<div style="text-align:center;margin:10px 0;"><img src="${esc(item.img)}" alt="Görsel" style="max-height:220px;max-width:90%;border-radius:12px;object-fit:cover;box-shadow:0 4px 15px rgba(0,0,0,0.4);"></div>` : ''}
     <div class="q-sub">${esc(item.q)}</div>
     <div class="q-answer">${esc(item.a)}</div>
     <button class="q-btn q-blue q-left" id="toWho">Hangi takım?</button>

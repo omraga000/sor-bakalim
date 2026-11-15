@@ -35,11 +35,26 @@ save();
 
 /* ---------- ekran render ---------- */
 function renderBoard() {
+  if (!CATS || CATS.length === 0) {
+    $("boardGrid").innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1.5rem; color: #FFFFFF;">
+        <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">📭</div>
+        <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700;">Aktif Soru Tahtası Bulunamadı</h2>
+        <p style="color: #94A3B8; font-size: 1rem; max-width: 480px; margin: 0 auto 1.5rem;">
+          Yönetim panelinden tüm kategoriler veya sorular silinmiş. Lütfen yönetim panelinden yeni kategoriler ve sorular ekleyin.
+        </p>
+        <a href="admin.html" style="display:inline-block; padding: 0.75rem 1.5rem; background: #F97316; color: #fff; border-radius: 10px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 15px rgba(249,115,22,0.4);">
+          Yönetim Paneline Git
+        </a>
+      </div>
+    `;
+    return;
+  }
   $("boardGrid").innerHTML = CATS.map(c => `
     <div class="board-column">
       <div class="column-header"><span class="cat-icon">${c.emoji}</span><span class="cat-title">${c.name}</span></div>
       <div class="tiles-container">
-        ${c.items.map((it, i) => state.used[c.id + "-" + i]
+        ${(c.items || []).map((it, i) => state.used[c.id + "-" + i]
           ? `<span class="point-tile used">${it.p}</span>`
           : `<a class="point-tile" href="soru.html?c=${encodeURIComponent(c.id)}&i=${i}">${it.p}</a>`
         ).join("")}
