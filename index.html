@@ -226,12 +226,12 @@
   const $ = id => document.getElementById(id);
 
   $("cards").innerHTML = CATS.length ? CATS.map(c => `
-    <button class="card" data-id="${c.id}" aria-pressed="false">
-      <span class="info" title="${c.info}">i</span>
-      <span class="tick">✓</span>
-      <span class="card-pic">${c.img ? `<img src="${c.img}" alt="${c.name}">` : c.emoji}</span>
-      <span class="card-name">${c.name}</span>
-    </button>`).join("") : '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748B;">Aktif kategori bulunamadı. <a href="admin.html" style="color: #F97316; font-weight: 700;">Yönetim Paneli</a>nden yeni kategori ekleyebilirsiniz.</div>';
+    <div class="card-flip-wrap"><div class="card" data-id="${c.id}" role="button" tabindex="0" aria-pressed="false">
+        <div class="card-front"><span class="tick" aria-hidden="true">✓</span><button type="button" class="info-btn" title="Bilgi Al (Kartı Çevir)" aria-label="Bilgi">i</button>
+        <div class="card-media">${c.img ? `<img src="${c.img}" alt="${c.name}" class="card-full-img">` : `<div class="card-emoji-fill">${c.emoji || '🎯'}</div>`}</div>
+        <div class="card-title-banner"><span class="card-name">${c.name}</span></div></div>
+        <div class="card-back"><button type="button" class="info-btn flip-back-btn" title="Karta Dön" aria-label="Geri Dön">✕</button><div class="card-back-content"><span class="back-emoji">${c.emoji || '🎯'}</span><h4 class="back-title">${c.name}</h4><div class="back-divider"></div><p class="back-desc">${c.info ? c.info : (c.name + ' hakkında sorular')}</p><span class="back-hint">Seçmek için tıkla</span></div></div>
+      </div></div>`).join("") : '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748B;">Aktif kategori bulunamadı. <a href="admin.html" style="color: #F97316; font-weight: 700;">Yönetim Paneli</a>nden yeni kategori ekleyebilirsiniz.</div>';
 
   function refresh() {
     document.querySelectorAll(".card").forEach(b => {
@@ -244,7 +244,32 @@
   }
 
   document.querySelectorAll(".card").forEach(b => {
-    b.onclick = () => {
+    const infoBtn = b.querySelector(".info-btn:not(.flip-back-btn)");
+    if (infoBtn) {
+      infoBtn.onclick = (e) => {
+        e.stopPropagation();
+        b.classList.toggle("flipped");
+      };
+    }
+
+    const flipBackBtn = b.querySelector(".flip-back-btn");
+    if (flipBackBtn) {
+      flipBackBtn.onclick = (e) => {
+        e.stopPropagation();
+        b.classList.remove("flipped");
+      };
+    }
+
+    b.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        if (e.target.closest(".info-btn")) return;
+        e.preventDefault();
+        b.click();
+      }
+    };
+
+    b.onclick = (e) => {
+      if (e.target.closest(".info-btn")) return;
       const id = b.dataset.id;
       $("note").textContent = "";
       if (picked.includes(id)) picked = picked.filter(x => x !== id);

@@ -20,6 +20,8 @@
   let editingQuestionId = null;
   let questionPendingDeleteId = null;
   let categoryPendingDeleteId = null;
+  let currentCategoryBase64 = '';
+  let currentQuestionBase64 = '';
 
   // --- DOM SELECTORS ---
   const el = {
@@ -35,7 +37,10 @@
     categoryNameInput: document.getElementById('categoryNameInput'),
     categoryEmojiInput: document.getElementById('categoryEmojiInput'),
     categoryInfoInput: document.getElementById('categoryInfoInput'),
-    categoryImgInput: document.getElementById('categoryImgInput'),
+    categoryImageInput: document.getElementById('categoryImageInput'),
+    categoryImagePreviewWrap: document.getElementById('categoryImagePreviewWrap'),
+    categoryImagePreviewImg: document.getElementById('categoryImagePreviewImg'),
+    removeCategoryImgBtn: document.getElementById('removeCategoryImgBtn'),
     categoryCardsGrid: document.getElementById('categoryCardsGrid'),
     categoryCountBadge: document.getElementById('categoryCountBadge'),
 
@@ -46,9 +51,10 @@
     questionIdInput: document.getElementById('questionIdInput'),
     categorySelect: document.getElementById('categorySelect'),
     questionTextInput: document.getElementById('questionTextInput'),
-    imageUrlInput: document.getElementById('imageUrlInput'),
+    questionImageInput: document.getElementById('questionImageInput'),
     imagePreviewWrap: document.getElementById('imagePreviewWrap'),
     imagePreviewImg: document.getElementById('imagePreviewImg'),
+    removeQuestionImgBtn: document.getElementById('removeQuestionImgBtn'),
     answerInput: document.getElementById('answerInput'),
     submitBtn: document.getElementById('submitBtn'),
     cancelEditBtn: document.getElementById('cancelEditBtn'),
@@ -149,7 +155,7 @@
 
     const emoji = el.categoryEmojiInput.value.trim() || "🎯";
     const info = el.categoryInfoInput.value.trim() || `${name} kategorisi hakkında sorular`;
-    const img = el.categoryImgInput.value.trim() || "";
+    const img = currentCategoryBase64 || "";
 
     // Generate unique slug
     const slugBase = slugifyTurkish(name);
@@ -170,9 +176,13 @@
     categories.push(newCategory);
     saveCategories();
 
-    // Reset Form
+    // Reset Form & Base64
     el.categoryForm.reset();
     el.categoryEmojiInput.value = "🎯";
+    currentCategoryBase64 = '';
+    if (el.categoryImageInput) el.categoryImageInput.value = '';
+    if (el.categoryImagePreviewWrap) el.categoryImagePreviewWrap.style.display = 'none';
+    if (el.categoryImagePreviewImg) el.categoryImagePreviewImg.src = '';
 
     showToast(`'${name}' kategorisi başarıyla eklendi! 🎉`, "success");
 
@@ -394,7 +404,7 @@
 
     const pointsRadio = document.querySelector('input[name="points"]:checked');
     const points = pointsRadio ? parseInt(pointsRadio.value, 10) : 200;
-    const imageUrl = el.imageUrlInput.value.trim();
+    const imageUrl = currentQuestionBase64 || "";
 
     if (editingQuestionId) {
       // UPDATE EXISTING
@@ -462,14 +472,20 @@
 
     el.questionTextInput.value = q.question;
     el.answerInput.value = q.answer;
-    el.imageUrlInput.value = q.imageUrl || '';
+    currentQuestionBase64 = q.imageUrl || '';
 
     // Set points radio
     const targetRadio = document.querySelector(`input[name="points"][value="${q.points}"]`);
     if (targetRadio) targetRadio.checked = true;
 
     // Update image preview
-    updateImagePreview();
+    if (currentQuestionBase64) {
+      if (el.imagePreviewImg) el.imagePreviewImg.src = currentQuestionBase64;
+      if (el.imagePreviewWrap) el.imagePreviewWrap.style.display = 'flex';
+    } else {
+      if (el.imagePreviewWrap) el.imagePreviewWrap.style.display = 'none';
+      if (el.imagePreviewImg) el.imagePreviewImg.src = '';
+    }
 
     // UI State changes
     el.formTitle.innerHTML = '✏️ Soruyu Düzenle';
@@ -490,13 +506,16 @@
     el.editBadgeIndicator.style.display = 'none';
     el.submitBtn.textContent = '💾 Kaydet';
     el.cancelEditBtn.style.display = 'none';
+    currentQuestionBase64 = '';
 
     // Reset default points to 200
     const radio200 = document.querySelector('input[name="points"][value="200"]');
     if (radio200) radio200.checked = true;
 
-    // Clear preview
+    // Clear preview & file input
+    if (el.questionImageInput) el.questionImageInput.value = '';
     if (el.imagePreviewWrap) el.imagePreviewWrap.style.display = 'none';
+    if (el.imagePreviewImg) el.imagePreviewImg.src = '';
   }
 
   function promptDeleteQuestion(id) {
@@ -598,7 +617,7 @@
           <td class="td-question">
             <div class="q-text-bold">${escapeHtml(q.question)}</div>
             ${hasImage ? `
-              <div class="q-image-thumbnail" onclick="window.SorBakalimAdmin.viewImage('${escapeHtml(q.imageUrl)}')">
+              <div class="q-image-thumbnail" onclick="window.SorBakalimAdmin.viewQuestionImage('${q.id}')">
                 🖼️ Görseli Görüntüle
               </div>
             ` : ''}
@@ -775,17 +794,70 @@
   // HELPERS & MODALS
   // ==========================================================================
 
-  function updateImagePreview() {
-    const url = el.imageUrlInput ? el.imageUrlInput.value.trim() : '';
-    if (url && isValidHttpUrl(url)) {
-      el.imagePreviewImg.src = url;
-      el.imagePreviewWrap.style.display = 'flex';
-      el.imagePreviewImg.onerror = () => {
-        el.imagePreviewWrap.style.display = 'none';
+  /**
+   * Dosyayı FileReader API kullanarak Base64 Data URL'e dönüştürür.
+   * Tarayıcı localStorage hafıza limitini aşmamak için yüksek çözünürlüklü
+   * fotoğrafları canvas ile makul boyutlara optimize eder.
+   */
+  function readFileAsBase64(file, maxWidth = 800, maxHeight = 800) {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        resolve('');
+        return;
+      }
+      if (!file.type || !file.type.startsWith('image/')) {
+        reject(new Error("Lütfen geçerli bir görsel dosyası (PNG, JPG, WEBP vb.) seçin."));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const dataUrl = e.target.result;
+        const img = new Image();
+        img.onload = function () {
+          // Eğer görsel zaten belirlenen boyutlardan küçükse ve boyutu 250KB'dan azsa doğrudan kabul et
+          if (img.width <= maxWidth && img.height <= maxHeight && file.size < 250 * 1024) {
+            resolve(dataUrl);
+            return;
+          }
+
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // JPEG formatında Base64 üret
+          const optimized = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(optimized);
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
       };
-    } else {
-      if (el.imagePreviewWrap) el.imagePreviewWrap.style.display = 'none';
-    }
+      reader.onerror = err => reject(err);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function viewQuestionImage(id) {
+    const q = questions.find(item => item.id === id);
+    if (!q || !q.imageUrl || !el.imageModal || !el.modalPreviewPic) return;
+    el.modalPreviewPic.src = q.imageUrl;
+    openModal(el.imageModal);
   }
 
   function viewImageModal(url) {
@@ -908,9 +980,56 @@
       el.resetFormBtn.addEventListener('click', resetQuestionForm);
     }
 
-    // Image URL live preview
-    if (el.imageUrlInput) {
-      el.imageUrlInput.addEventListener('input', debounce(updateImagePreview, 400));
+    // Category Image File Select (Local Computer Upload -> Base64)
+    if (el.categoryImageInput) {
+      el.categoryImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const base64 = await readFileAsBase64(file, 400, 400);
+          currentCategoryBase64 = base64;
+          if (el.categoryImagePreviewImg) el.categoryImagePreviewImg.src = base64;
+          if (el.categoryImagePreviewWrap) el.categoryImagePreviewWrap.style.display = 'flex';
+          showToast("Kategori görseli yüklendi.", "info");
+        } catch (err) {
+          showToast(err.message || "Görsel yüklenemedi.", "error");
+        }
+      });
+    }
+
+    if (el.removeCategoryImgBtn) {
+      el.removeCategoryImgBtn.addEventListener('click', () => {
+        currentCategoryBase64 = '';
+        if (el.categoryImageInput) el.categoryImageInput.value = '';
+        if (el.categoryImagePreviewWrap) el.categoryImagePreviewWrap.style.display = 'none';
+        if (el.categoryImagePreviewImg) el.categoryImagePreviewImg.src = '';
+      });
+    }
+
+    // Question Image File Select (Local Computer Upload -> Base64)
+    if (el.questionImageInput) {
+      el.questionImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const base64 = await readFileAsBase64(file, 800, 800);
+          currentQuestionBase64 = base64;
+          if (el.imagePreviewImg) el.imagePreviewImg.src = base64;
+          if (el.imagePreviewWrap) el.imagePreviewWrap.style.display = 'flex';
+          showToast("Soru görseli yüklendi.", "info");
+        } catch (err) {
+          showToast(err.message || "Görsel yüklenemedi.", "error");
+        }
+      });
+    }
+
+    if (el.removeQuestionImgBtn) {
+      el.removeQuestionImgBtn.addEventListener('click', () => {
+        currentQuestionBase64 = '';
+        if (el.questionImageInput) el.questionImageInput.value = '';
+        if (el.imagePreviewWrap) el.imagePreviewWrap.style.display = 'none';
+        if (el.imagePreviewImg) el.imagePreviewImg.src = '';
+      });
     }
 
     // Question Filters & Search
@@ -979,7 +1098,8 @@
     deleteCategory: promptDeleteCategory,
     editQuestion: startEditQuestion,
     deleteQuestion: promptDeleteQuestion,
-    viewImage: viewImageModal
+    viewImage: viewImageModal,
+    viewQuestionImage: viewQuestionImage
   };
 
   // Run on DOM ready

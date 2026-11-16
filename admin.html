@@ -206,13 +206,19 @@
               <textarea class="form-control" id="categoryInfoInput" rows="2" placeholder="Örn: Süper Lig, milli maçlar ve futbol efsaneleri..." required></textarea>
             </div>
 
-            <!-- Görsel URL'si (Opsiyonel) -->
+            <!-- Kategori Görseli (Bilgisayardan Yükleme) -->
             <div class="form-group">
-              <label class="form-label" for="categoryImgInput">
-                <span>Görsel URL'si (Opsiyonel)</span>
-                <span style="font-size: 0.75rem; color: var(--text-dim);">https://...</span>
+              <label class="form-label" for="categoryImageInput">
+                <span>Kategori Görseli (Opsiyonel)</span>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">Bilgisayardan Seç</span>
               </label>
-              <input type="url" class="form-control" id="categoryImgInput" placeholder="https://example.com/kategori-kapak.jpg">
+              <div class="file-input-wrapper">
+                <input type="file" class="form-control file-input-field" id="categoryImageInput" accept="image/*">
+              </div>
+              <div class="image-preview-wrap" id="categoryImagePreviewWrap">
+                <img src="" alt="Kategori Görsel Önizleme" class="image-preview-img" id="categoryImagePreviewImg">
+                <button type="button" class="btn btn-secondary btn-sm" id="removeCategoryImgBtn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">Görseli Kaldır</button>
+              </div>
             </div>
 
             <!-- Düğmeler -->
@@ -343,15 +349,18 @@
               <input type="text" class="form-control" id="answerInput" placeholder="Örn: Galatasaray" required>
             </div>
 
-            <!-- İsteğe Bağlı Görsel URL'si (Görsel Destekli Sorular İçin) -->
+            <!-- Soru Görseli (Bilgisayardan Yükleme) -->
             <div class="form-group">
-              <label class="form-label" for="imageUrlInput">
-                <span>Görsel URL'si (Opsiyonel)</span>
-                <span style="font-size: 0.75rem; color: var(--text-dim);">https://...</span>
+              <label class="form-label" for="questionImageInput">
+                <span>Soru Görseli (Opsiyonel)</span>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">Bilgisayardan Seç</span>
               </label>
-              <input type="url" class="form-control" id="imageUrlInput" placeholder="https://example.com/resim.jpg">
+              <div class="file-input-wrapper">
+                <input type="file" class="form-control file-input-field" id="questionImageInput" accept="image/*">
+              </div>
               <div class="image-preview-wrap" id="imagePreviewWrap">
                 <img src="" alt="Görsel Önizleme" class="image-preview-img" id="imagePreviewImg">
+                <button type="button" class="btn btn-secondary btn-sm" id="removeQuestionImgBtn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">Görseli Kaldır</button>
               </div>
             </div>
 
