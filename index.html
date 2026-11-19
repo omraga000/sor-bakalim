@@ -17,7 +17,6 @@
     <a class="logo" href="index.html"><img src="img/logo.png" alt="Sor Bakalım" class="logo-img">Sor Bakalım</a>
     <a class="play on" href="#oyun">Oyna</a>
     <a class="link" href="iletisim.html">İletişim</a>
-    <a class="link" href="admin.html">Yönetim</a>
     <div class="auth">
       <a href="giris.html">Giriş Yap</a>
       <span class="sep"></span>
@@ -55,25 +54,21 @@
           
           <div class="rules-grid">
               <div class="rule-card">
-                  <div class="rule-icon">🎯</div>
                   <h3>1. Kategori ve Puan Seçimi</h3>
                   <p>Sırası gelen oyuncu/takım, Türk kültürü, diziler, tarih veya mutfak kategorilerinden birini ve zorluk derecesine göre puan değerini (200, 400, 600) seçer.</p>
               </div>
               
               <div class="rule-card">
-                  <div class="rule-icon">⏱️</div>
                   <h3>2. Soru ve Süre</h3>
                   <p>Seçilen kategoriye ait soru ekrana gelir. Doğru cevabı bulmak için sınırlı bir süre vardır (30 saniye). Hızlı düşünen kazanır!</p>
               </div>
               
               <div class="rule-card">
-                  <div class="rule-icon">🏆</div>
                   <h3>3. Puanlama ve Yarış</h3>
                   <p>Takımlar cevabını kendi aralarında söyler. Cevap gösterilince doğru bilen takım sorunun puanını alır. Kimse bilemezse puan yok, sıra diğer takıma geçer. En yüksek puanı toplayan takım kazanır!</p>
               </div>
               
               <div class="rule-card">
-                  <div class="rule-icon">💡</div>
                   <h3>4. Joker Hakları</h3>
                   <p>Oyuna başlamadan önce her takım kullanmak istediği joker haklarını seçer: Cevabı İkiye Katla, Telefonla Joker, Çukur, Dinlen ve Tuzak. Jokerleri akıllıca kullanarak rakibin önüne geç!</p>
               </div>
@@ -85,7 +80,7 @@
   <section class="sec" id="oyun">
     <div class="sec-head">
       <h2 class="sec-title">Kategorilerini seç</h2>
-      <p>Oynamak istediğin kategorilere dokun. En az 2, en fazla 6 kategori seçebilirsin.</p>
+      <p>Oynamak istediğin kategorilere dokun. Oyunu başlatmak için tam 6 kategori seçmelisin.</p>
     </div>
 
     <div class="cards" id="cards"></div>
@@ -102,42 +97,47 @@
     <div class="container">
       <h2>Takım Bilgilerini Belirle</h2>
       
-      <div class="game-name-input-wrapper">
-        <input type="text" id="gameName" placeholder="Oyun Adı (Örn: Aile Yarışması)" class="main-input">
+      <div class="game-name-input-wrapper" id="gameNameWrap">
+        <input type="text" id="gameName" placeholder="Oyun Adı (Örn: Aile Yarışması)" class="main-input" autocomplete="off">
+        <span class="input-error-msg" id="gameNameError"></span>
       </div>
 
       <div class="teams-inputs-grid">
-        <div class="team-input-box">
+        <div class="team-input-box" id="team1Box">
           <h3>Birinci Takım</h3>
-          <input type="text" id="team1Name" placeholder="Birinci Takım Adı" class="main-input">
+          <input type="text" id="team1Name" placeholder="Birinci Takım Adı" class="main-input" autocomplete="off">
+          <span class="input-error-msg" id="team1NameError"></span>
         </div>
-        <div class="team-input-box">
+        <div class="team-input-box" id="team2Box">
           <h3>İkinci Takım</h3>
-          <input type="text" id="team2Name" placeholder="İkinci Takım Adı" class="main-input">
+          <input type="text" id="team2Name" placeholder="İkinci Takım Adı" class="main-input" autocomplete="off">
+          <span class="input-error-msg" id="team2NameError"></span>
         </div>
       </div>
 
       <div class="lifelines-selection-grid">
-        <div class="team-lifelines">
-          <h3>Birinci Takım: Joker Hakları Seç</h3>
-          <div class="lifelines-options">
-            <button class="lifeline-btn sel" data-team="1" data-lifeline="double">Cevabı İkiye Katla</button>
-            <button class="lifeline-btn sel" data-team="1" data-lifeline="call">Telefonla Joker</button>
-            <button class="lifeline-btn sel" data-team="1" data-lifeline="pit">Çukur</button>
-            <button class="lifeline-btn" data-team="1" data-lifeline="rest">Dinlen</button>
-            <button class="lifeline-btn" data-team="1" data-lifeline="trap">Tuzak</button>
+        <div class="team-lifelines" id="team1LifelinesBox">
+          <h3>Birinci Takım: Joker Hakları Seç <span class="joker-counter ready" id="t1JokerCount">(3/3)</span></h3>
+          <div class="lifelines-options" id="team1Lifelines">
+            <button type="button" class="lifeline-btn sel" data-team="1" data-lifeline="double">Cevabı İkiye Katla</button>
+            <button type="button" class="lifeline-btn sel" data-team="1" data-lifeline="call">Telefonla Joker</button>
+            <button type="button" class="lifeline-btn sel" data-team="1" data-lifeline="pit">Çukur</button>
+            <button type="button" class="lifeline-btn" data-team="1" data-lifeline="rest">Dinlen</button>
+            <button type="button" class="lifeline-btn" data-team="1" data-lifeline="trap">Tuzak</button>
           </div>
+          <p class="joker-feedback" id="t1JokerFeedback" aria-live="polite"></p>
         </div>
 
-        <div class="team-lifelines">
-          <h3>İkinci Takım: Joker Hakları Seç</h3>
-          <div class="lifelines-options">
-            <button class="lifeline-btn sel" data-team="2" data-lifeline="double">Cevabı İkiye Katla</button>
-            <button class="lifeline-btn sel" data-team="2" data-lifeline="call">Telefonla Joker</button>
-            <button class="lifeline-btn sel" data-team="2" data-lifeline="pit">Çukur</button>
-            <button class="lifeline-btn" data-team="2" data-lifeline="rest">Dinlen</button>
-            <button class="lifeline-btn" data-team="2" data-lifeline="trap">Tuzak</button>
+        <div class="team-lifelines" id="team2LifelinesBox">
+          <h3>İkinci Takım: Joker Hakları Seç <span class="joker-counter ready" id="t2JokerCount">(3/3)</span></h3>
+          <div class="lifelines-options" id="team2Lifelines">
+            <button type="button" class="lifeline-btn sel" data-team="2" data-lifeline="double">Cevabı İkiye Katla</button>
+            <button type="button" class="lifeline-btn sel" data-team="2" data-lifeline="call">Telefonla Joker</button>
+            <button type="button" class="lifeline-btn sel" data-team="2" data-lifeline="pit">Çukur</button>
+            <button type="button" class="lifeline-btn" data-team="2" data-lifeline="rest">Dinlen</button>
+            <button type="button" class="lifeline-btn" data-team="2" data-lifeline="trap">Tuzak</button>
           </div>
+          <p class="joker-feedback" id="t2JokerFeedback" aria-live="polite"></p>
         </div>
       </div>
 
@@ -160,6 +160,8 @@
 
           <div class="player-names-grid" id="playerNamesGrid"></div>
 
+          <div id="splitterErrorMsg" class="splitter-error-msg" style="display: none;" role="alert"></div>
+
           <button type="button" id="generateTeamsBtn" class="generate-teams-btn">Dağılımı Yap (Takımları Oluştur)</button>
           
           <div class="generated-teams-result" id="generatedTeamsResult" style="display: none;">
@@ -174,6 +176,7 @@
 
       <!-- زر ابدأ اللعب النهائي (مع شاشة التحميل) -->
       <div class="final-start-container" style="margin-top: 40px;">
+        <div id="startValidationMsg" class="start-validation-msg" style="display: none;" role="alert"></div>
         <button id="finalStartBtn" class="final-start-btn" onclick="startLoadingAndRedirect()">Oyunu Başlat</button>
       </div>
 
@@ -182,10 +185,14 @@
 
 </main>
 
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
 <script src="js/questions.js"></script>
 
 <script>
-  const MAX = 6, MIN = 2;
+  const MAX_CATS = 6;
+  const REQUIRED_CATS = 6;
+  const JOKER_MAX = 3;
 
   // SADECE ve KESİNLİKLE localStorage üzerinden okunur; boşsa ([]) kesinlikle boş döner
   const CATS = (function() {
@@ -201,37 +208,74 @@
     }
     return [];
   })();
-  /* Eski statik liste tamamen devre dışı bırakıldı
-  const _UNUSED = [
-    { id: "tarih",    name: "Tarih",             emoji: "🏛️", img: "", info: "Osmanlı’dan Cumhuriyet’e tarih soruları" },
-    { id: "cografya", name: "Coğrafya",          emoji: "🗺️", img: "", info: "Şehirler, dağlar, nehirler" },
-    { id: "yemek",    name: "Yemek",             emoji: "🍢", img: "", info: "Türk mutfağı ve lezzetler" },
-    { id: "spor",     name: "Spor",              emoji: "⚽", img: "", info: "Futbol, basketbol ve daha fazlası" },
-    { id: "kultur",   name: "Kültür ve Sanat",   emoji: "🎭", img: "", info: "Edebiyat, müzik, sinema" },
-    { id: "genel",    name: "Genel Kültür",      emoji: "💡", img: "", info: "Her konudan karışık sorular" },
-    { id: "hayvan",   name: "Hayvanlar Alemi",   emoji: "🦁", img: "", info: "Hayvanlar hakkında ilginç sorular" },
-    { id: "teknoloji",name: "Teknoloji",         emoji: "💻", img: "", info: "Bilgisayar, telefon, internet" },
-    { id: "muzik",    name: "Müzik",             emoji: "🎵", img: "", info: "Sanatçılar ve şarkılar" },
-    { id: "dizi",     name: "Dizi ve Film",      emoji: "🎬", img: "", info: "Türk dizileri ve filmleri" },
-    { id: "sehir",    name: "Şehirler",          emoji: "🌆", img: "", info: "81 ilimiz hakkında sorular" },
-    { id: "atasozu",  name: "Atasözleri",        emoji: "📜", img: "", info: "Atasözleri ve deyimler" }
-  ]; */
 
   let picked = [];
   try {
     const s = JSON.parse(localStorage.getItem("cats"));
-    if (Array.isArray(s)) picked = s.filter(id => CATS.some(c => c.id === id)).slice(0, MAX);
+    if (Array.isArray(s)) picked = s.filter(id => CATS.some(c => c.id === id)).slice(0, MAX_CATS);
   } catch (e) {}
 
   const $ = id => document.getElementById(id);
 
+  // Toast notification helper
+  function showToast(message, type = "info") {
+    let container = document.getElementById("toastContainer");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toastContainer";
+      container.className = "toast-container";
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    
+    let icon = "ℹ️";
+    if (type === "warning") icon = "⚠️";
+    if (type === "error") icon = "❌";
+    if (type === "success") icon = "✅";
+
+    toast.innerHTML = `<span style="font-size:1.15rem; flex-shrink:0;">${icon}</span><span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add("toast-hiding");
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 250);
+    }, 3200);
+  }
+
+  // Restore saved setup from localStorage if available
+  try {
+    const savedSetup = JSON.parse(localStorage.getItem("setup"));
+    if (savedSetup) {
+      if (savedSetup.gameName && $("gameName")) $("gameName").value = savedSetup.gameName;
+      if (savedSetup.team1 && $("team1Name")) $("team1Name").value = savedSetup.team1;
+      if (savedSetup.team2 && $("team2Name")) $("team2Name").value = savedSetup.team2;
+      if (savedSetup.lifelines) {
+        if (Array.isArray(savedSetup.lifelines[1])) {
+          document.querySelectorAll('.lifeline-btn[data-team="1"]').forEach(btn => {
+            btn.classList.toggle("sel", savedSetup.lifelines[1].includes(btn.dataset.lifeline));
+          });
+        }
+        if (Array.isArray(savedSetup.lifelines[2])) {
+          document.querySelectorAll('.lifeline-btn[data-team="2"]').forEach(btn => {
+            btn.classList.toggle("sel", savedSetup.lifelines[2].includes(btn.dataset.lifeline));
+          });
+        }
+      }
+    }
+  } catch (e) {}
+
+  // Render Category Cards
   $("cards").innerHTML = CATS.length ? CATS.map(c => `
     <div class="card-flip-wrap"><div class="card" data-id="${c.id}" role="button" tabindex="0" aria-pressed="false">
         <div class="card-front"><span class="tick" aria-hidden="true">✓</span><button type="button" class="info-btn" title="Bilgi Al (Kartı Çevir)" aria-label="Bilgi">i</button>
         <div class="card-media">${c.img ? `<img src="${c.img}" alt="${c.name}" class="card-full-img">` : `<div class="card-emoji-fill">${c.emoji || '🎯'}</div>`}</div>
         <div class="card-title-banner"><span class="card-name">${c.name}</span></div></div>
         <div class="card-back"><button type="button" class="info-btn flip-back-btn" title="Karta Dön" aria-label="Geri Dön">✕</button><div class="card-back-content"><span class="back-emoji">${c.emoji || '🎯'}</span><h4 class="back-title">${c.name}</h4><div class="back-divider"></div><p class="back-desc">${c.info ? c.info : (c.name + ' hakkında sorular')}</p><span class="back-hint">Seçmek için tıkla</span></div></div>
-      </div></div>`).join("") : '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #64748B;">Aktif kategori bulunamadı. <a href="admin.html" style="color: #F97316; font-weight: 700;">Yönetim Paneli</a>nden yeni kategori ekleyebilirsiniz.</div>';
+      </div></div>`).join("") : '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted, #635147);">Aktif kategori bulunamadı.</div>';
 
   function refresh() {
     document.querySelectorAll(".card").forEach(b => {
@@ -239,8 +283,24 @@
       b.classList.toggle("sel", on);
       b.setAttribute("aria-pressed", on);
     });
-    $("count").textContent = "Seçilen: " + picked.length + " / " + MAX;
-    $("go").disabled = picked.length < MIN;
+    $("count").textContent = "Seçilen: " + picked.length + " / " + MAX_CATS;
+    $("go").disabled = picked.length !== REQUIRED_CATS;
+    if (picked.length === REQUIRED_CATS) {
+      $("go").textContent = "Kategorileri Kaydet ✓";
+    } else {
+      $("go").textContent = "Kategorileri Kaydet (" + picked.length + "/" + REQUIRED_CATS + ")";
+    }
+  }
+
+  function clearCategoryError() {
+    const oyunSec = $("oyun");
+    if (oyunSec) oyunSec.classList.remove("error-highlight");
+    const startbar = document.querySelector(".startbar");
+    if (startbar) startbar.classList.remove("error-highlight");
+    if ($("note") && $("note").classList.contains("error")) {
+      $("note").textContent = "";
+      $("note").classList.remove("error", "shake");
+    }
   }
 
   document.querySelectorAll(".card").forEach(b => {
@@ -272,116 +332,410 @@
       if (e.target.closest(".info-btn")) return;
       const id = b.dataset.id;
       $("note").textContent = "";
-      if (picked.includes(id)) picked = picked.filter(x => x !== id);
-      else if (picked.length < MAX) picked.push(id);
-      else $("note").textContent = "En fazla " + MAX + " kategori seçebilirsin.";
+      $("note").classList.remove("error", "shake");
+
+      if (picked.includes(id)) {
+        // Deselecting is always allowed
+        picked = picked.filter(x => x !== id);
+        clearCategoryError();
+      } else {
+        // Attempting to select
+        if (picked.length >= MAX_CATS) {
+          // Strictly prevent adding 7th category
+          const msg = "En fazla 6 kategori seçebilirsin! Başka bir kategori seçmek için önce seçili olanlardan birini kaldırın.";
+          $("note").textContent = msg;
+          $("note").classList.add("error");
+          $("note").classList.remove("shake");
+          void $("note").offsetWidth;
+          $("note").classList.add("shake");
+          showToast("En fazla 6 kategori seçebilirsin!", "warning");
+          return;
+        }
+        picked.push(id);
+        if (picked.length === REQUIRED_CATS) {
+          clearCategoryError();
+        }
+      }
       refresh();
     };
   });
 
   $("go").onclick = () => {
+    if (picked.length !== REQUIRED_CATS) {
+      showToast(`Oyunu başlatmak için tam ${REQUIRED_CATS} kategori seçmelisiniz! (Şu an: ${picked.length})`, "warning");
+      $("note").textContent = `Lütfen tam ${REQUIRED_CATS} kategori seçiniz. (Şu an seçilen: ${picked.length} / ${REQUIRED_CATS})`;
+      $("note").classList.add("error");
+      return;
+    }
     try { localStorage.setItem("cats", JSON.stringify(picked)); } catch (e) {}
-    $("note").textContent = "Kategoriler kaydedildi ✓ Şimdi takım bilgilerini doldurabilirsin.";
+    $("note").textContent = "6 kategori kaydedildi ✓ Şimdi takım bilgilerini doldurabilirsin.";
+    $("note").classList.remove("error");
+    clearCategoryError();
+    showToast("6 kategori başarıyla kaydedildi!", "info");
   };
 
   refresh();
 
-  // دالة الانتقال السلس إلى قسم الفئات عند الضغط على علامة الزائد (+)
+  // Scroll smooth to categories
   function scrollToCategories() {
     document.getElementById('oyun').scrollIntoView({ behavior: 'smooth' });
   }
 
+  // --- Joker Management (Max 3 per team, swap/change freely) ---
+  function getSelectedJokers(team) {
+    return Array.from(document.querySelectorAll(`.lifeline-btn[data-team="${team}"].sel`));
+  }
+
+  function updateJokerUI(team) {
+    const selected = getSelectedJokers(team);
+    const countSpan = $(`t${team}JokerCount`);
+    if (countSpan) {
+      countSpan.textContent = `(${selected.length}/${JOKER_MAX})`;
+      countSpan.classList.toggle('ready', selected.length === JOKER_MAX);
+    }
+  }
+
+  function clearJokerError(team) {
+    const box = $(`team${team}LifelinesBox`);
+    if (box) box.classList.remove("field-error", "error-highlight");
+    const feedback = $(`t${team}JokerFeedback`);
+    if (feedback) feedback.textContent = "";
+  }
+
   document.querySelectorAll(".lifeline-btn").forEach(btn => {
-    btn.onclick = () => { btn.classList.toggle("sel"); };
+    btn.onclick = () => {
+      const team = btn.dataset.team;
+      const isSelected = btn.classList.contains("sel");
+      const currentSelected = getSelectedJokers(team);
+      const feedbackEl = $(`t${team}JokerFeedback`);
+
+      if (isSelected) {
+        // Deselecting is always allowed (free to swap/change)
+        btn.classList.remove("sel");
+        if (feedbackEl) feedbackEl.textContent = "";
+        updateJokerUI(team);
+      } else {
+        // Attempting to select a 4th joker
+        if (currentSelected.length >= JOKER_MAX) {
+          const limitMsg = `Her takım için en fazla ${JOKER_MAX} joker seçebilirsiniz. Başka bir joker seçmek için önce seçili olanlardan birini kaldırın.`;
+          if (feedbackEl) {
+            feedbackEl.textContent = limitMsg;
+            feedbackEl.classList.remove("shake");
+            void feedbackEl.offsetWidth;
+            feedbackEl.classList.add("shake");
+          }
+          showToast(`Her takım için en fazla ${JOKER_MAX} joker seçebilirsiniz! Seçili bir jokeri kaldırıp değiştirebilirsiniz.`, "warning");
+          return;
+        }
+        btn.classList.add("sel");
+        if (feedbackEl) feedbackEl.textContent = "";
+        updateJokerUI(team);
+        if (getSelectedJokers(team).length === JOKER_MAX) {
+          clearJokerError(team);
+        }
+      }
+    };
   });
 
+  // Initialize joker counts on load
+  updateJokerUI(1);
+  updateJokerUI(2);
+
+  // --- Error clearing on input ---
+  function clearInputError(inputEl, errorEl) {
+    if (inputEl) inputEl.classList.remove("field-error", "error-highlight");
+    if (errorEl) errorEl.textContent = "";
+  }
+
+  $("gameName").addEventListener("input", () => {
+    if ($("gameName").value.trim()) {
+      clearInputError($("gameName"), $("gameNameError"));
+    }
+  });
+
+  $("team1Name").addEventListener("input", () => {
+    if ($("team1Name").value.trim()) {
+      clearInputError($("team1Name"), $("team1NameError"));
+    }
+  });
+
+  $("team2Name").addEventListener("input", () => {
+    if ($("team2Name").value.trim()) {
+      clearInputError($("team2Name"), $("team2NameError"));
+    }
+  });
+
+  // --- Team Splitter Accordion ---
   const toggleSplitter = $("toggleSplitter");
   const splitterContent = $("splitterContent");
   const arrowIcon = $("arrowIcon");
+  const playerCountDisplay = $("playerCountDisplay");
+  const playerNamesGrid = $("playerNamesGrid");
+  const splitterErrorMsg = $("splitterErrorMsg");
   let playerCount = 2;
+
+  function createPlayerInput(index) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "main-input player-name-input";
+    input.placeholder = `${index}. Oyuncu Adı`;
+    input.autocomplete = "off";
+    input.addEventListener("input", () => {
+      if (input.value.trim()) {
+        input.classList.remove("field-error");
+        checkAndClearSplitterErrors();
+      }
+    });
+    return input;
+  }
+
+  function syncPlayerInputs(targetCount) {
+    const currentCount = playerNamesGrid.children.length;
+    if (targetCount > currentCount) {
+      for (let i = currentCount + 1; i <= targetCount; i++) {
+        playerNamesGrid.appendChild(createPlayerInput(i));
+      }
+    } else if (targetCount < currentCount) {
+      while (playerNamesGrid.children.length > targetCount) {
+        playerNamesGrid.removeChild(playerNamesGrid.lastElementChild);
+      }
+      checkAndClearSplitterErrors();
+    }
+    playerCount = targetCount;
+    playerCountDisplay.textContent = playerCount;
+  }
+
+  function checkAndClearSplitterErrors() {
+    const inputs = playerNamesGrid.querySelectorAll(".player-name-input");
+    const anyEmpty = Array.from(inputs).some(inp => !inp.value.trim());
+    if (!anyEmpty && splitterErrorMsg) {
+      splitterErrorMsg.style.display = "none";
+      splitterErrorMsg.textContent = "";
+    }
+  }
+
+  // Initialize starting 2 player inputs
+  syncPlayerInputs(playerCount);
 
   toggleSplitter.onclick = () => {
     if (splitterContent.style.display === "none") {
       splitterContent.style.display = "block";
       arrowIcon.textContent = "▲";
-      renderPlayerInputs();
     } else {
       splitterContent.style.display = "none";
       arrowIcon.textContent = "▼";
     }
   };
 
-  const playerCountDisplay = $("playerCountDisplay");
-  const playerNamesGrid = $("playerNamesGrid");
-
-  function renderPlayerInputs() {
-    let html = "";
-    for (let i = 1; i <= playerCount; i++) {
-      html += `<input type="text" class="main-input player-name-input" placeholder="${i}. Oyuncu Adı">`;
-    }
-    playerNamesGrid.innerHTML = html;
-  }
-
   $("plusBtn").onclick = () => {
     if (playerCount < 10) {
-      playerCount++;
-      playerCountDisplay.textContent = playerCount;
-      renderPlayerInputs();
+      syncPlayerInputs(playerCount + 1);
     }
   };
 
   $("minusBtn").onclick = () => {
     if (playerCount > 2) {
-      playerCount--;
-      playerCountDisplay.textContent = playerCount;
-      renderPlayerInputs();
+      syncPlayerInputs(playerCount - 1);
     }
   };
 
   $("generateTeamsBtn").onclick = () => {
-    const inputs = document.querySelectorAll(".player-name-input");
-    let players = [];
-    inputs.forEach((input, index) => {
-      let name = input.value.trim();
-      players.push(name !== "" ? name : `${index + 1}. Oyuncu`);
+    const inputs = Array.from(playerNamesGrid.querySelectorAll(".player-name-input"));
+    let firstEmptyInput = null;
+    let emptyCount = 0;
+
+    inputs.forEach(input => {
+      const val = input.value.trim();
+      if (!val) {
+        input.classList.add("field-error");
+        emptyCount++;
+        if (!firstEmptyInput) {
+          firstEmptyInput = input;
+        }
+      } else {
+        input.classList.remove("field-error");
+      }
     });
 
-    players.sort(() => Math.random() - 0.5);
-    let mid = Math.ceil(players.length / 2);
-    let team1Players = players.slice(0, mid);
-    let team2Players = players.slice(mid);
+    if (emptyCount > 0) {
+      if (splitterErrorMsg) {
+        splitterErrorMsg.textContent = "Lütfen takımları oluşturmadan önce tüm oyuncu isimlerini eksiksiz giriniz!";
+        splitterErrorMsg.style.display = "block";
+        splitterErrorMsg.classList.remove("shake");
+        void splitterErrorMsg.offsetWidth;
+        splitterErrorMsg.classList.add("shake");
+      }
+      showToast("Lütfen tüm oyuncuların isimlerini giriniz!", "warning");
+      
+      if ($("generatedTeamsResult")) {
+        $("generatedTeamsResult").style.display = "none";
+      }
 
-    let t1Name = $("team1Name").value.trim() || "Birinci Takım";
-    let t2Name = $("team2Name").value.trim() || "İkinci Takım";
+      if (firstEmptyInput) {
+        firstEmptyInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          firstEmptyInput.focus({ preventScroll: true });
+        }, 300);
+      }
+      return;
+    }
+
+    if (splitterErrorMsg) {
+      splitterErrorMsg.style.display = "none";
+      splitterErrorMsg.textContent = "";
+    }
+
+    const players = inputs.map(input => input.value.trim());
+
+    players.sort(() => Math.random() - 0.5);
+    const mid = Math.ceil(players.length / 2);
+    const team1Players = players.slice(0, mid);
+    const team2Players = players.slice(mid);
+
+    const t1Name = $("team1Name").value.trim() || "Birinci Takım";
+    const t2Name = $("team2Name").value.trim() || "İkinci Takım";
 
     $("resTeam1").innerHTML = `<strong>${t1Name}</strong><ul>` + team1Players.map(p => `<li>${p}</li>`).join("") + "</ul>";
     $("resTeam2").innerHTML = `<strong>${t2Name}</strong><ul>` + team2Players.map(p => `<li>${p}</li>`).join("") + "</ul>";
 
     $("generatedTeamsResult").style.display = "block";
+    showToast("Takımlar başarıyla oluşturuldu!", "success");
   };
 
-  // الانتقال إلى اللعبة: يحفظ الإعدادات ثم يفتح game.html
+  // --- Strict Validation Before Starting Game ("Oyunu Başlat") ---
   function startLoadingAndRedirect() {
-    if (picked.length < MIN) {
-      $("note").textContent = "Önce en az " + MIN + " kategori seç.";
-      document.getElementById("oyun").scrollIntoView({ behavior: "smooth" });
+    const errors = [];
+    let firstInvalidEl = null;
+
+    // Reset previous errors
+    clearInputError($("gameName"), $("gameNameError"));
+    clearInputError($("team1Name"), $("team1NameError"));
+    clearInputError($("team2Name"), $("team2NameError"));
+    clearCategoryError();
+    clearJokerError(1);
+    clearJokerError(2);
+    if ($("startValidationMsg")) {
+      $("startValidationMsg").style.display = "none";
+      $("startValidationMsg").innerHTML = "";
+    }
+
+    // 1. Categories Check: Must be exactly 6
+    if (picked.length !== REQUIRED_CATS) {
+      errors.push(`Kategoriler: Oyunu başlatmak için tam 6 kategori seçmelisiniz. (Şu an seçilen: ${picked.length} / 6)`);
+      const oyunSec = $("oyun");
+      if (oyunSec) oyunSec.classList.add("error-highlight");
+      const startbar = document.querySelector(".startbar");
+      if (startbar) startbar.classList.add("error-highlight");
+      if ($("note")) {
+        $("note").textContent = `Oyunu başlatmak için 6 kategori seçmelisiniz! (Şu an: ${picked.length} / 6)`;
+        $("note").classList.add("error");
+      }
+      if (!firstInvalidEl) firstInvalidEl = oyunSec;
+    }
+
+    // 2. Game Name Check
+    const gameNameVal = $("gameName").value.trim();
+    if (!gameNameVal) {
+      errors.push("Oyun Adı: Lütfen bir oyun adı giriniz.");
+      $("gameName").classList.add("field-error");
+      $("gameNameError").textContent = "Lütfen bir oyun adı girin.";
+      if (!firstInvalidEl) firstInvalidEl = $("gameName");
+    }
+
+    // 3. Team 1 Name Check
+    const team1Val = $("team1Name").value.trim();
+    if (!team1Val) {
+      errors.push("Birinci Takım: Lütfen 1. takım adını giriniz.");
+      $("team1Name").classList.add("field-error");
+      $("team1NameError").textContent = "Lütfen 1. takım adını girin.";
+      if (!firstInvalidEl) firstInvalidEl = $("team1Name");
+    }
+
+    // 4. Team 2 Name Check
+    const team2Val = $("team2Name").value.trim();
+    if (!team2Val) {
+      errors.push("İkinci Takım: Lütfen 2. takım adını giriniz.");
+      $("team2Name").classList.add("field-error");
+      $("team2NameError").textContent = "Lütfen 2. takım adını girin.";
+      if (!firstInvalidEl) firstInvalidEl = $("team2Name");
+    }
+
+    // 5. Team 1 Jokers Check: Must be exactly 3
+    const t1Jokers = getSelectedJokers(1);
+    if (t1Jokers.length !== JOKER_MAX) {
+      errors.push(`Birinci Takım Jokeri: Tam olarak 3 joker seçilmelidir. (Şu an seçilen: ${t1Jokers.length} / 3)`);
+      const t1Box = $("team1LifelinesBox");
+      if (t1Box) t1Box.classList.add("field-error");
+      const t1Feedback = $("t1JokerFeedback");
+      if (t1Feedback) {
+        t1Feedback.textContent = `Lütfen 1. takım için tam 3 joker seçin! (Şu an: ${t1Jokers.length} / 3)`;
+        t1Feedback.classList.remove("shake");
+        void t1Feedback.offsetWidth;
+        t1Feedback.classList.add("shake");
+      }
+      if (!firstInvalidEl) firstInvalidEl = t1Box;
+    }
+
+    // 6. Team 2 Jokers Check: Must be exactly 3
+    const t2Jokers = getSelectedJokers(2);
+    if (t2Jokers.length !== JOKER_MAX) {
+      errors.push(`İkinci Takım Jokeri: Tam olarak 3 joker seçilmelidir. (Şu an seçilen: ${t2Jokers.length} / 3)`);
+      const t2Box = $("team2LifelinesBox");
+      if (t2Box) t2Box.classList.add("field-error");
+      const t2Feedback = $("t2JokerFeedback");
+      if (t2Feedback) {
+        t2Feedback.textContent = `Lütfen 2. takım için tam 3 joker seçin! (Şu an: ${t2Jokers.length} / 3)`;
+        t2Feedback.classList.remove("shake");
+        void t2Feedback.offsetWidth;
+        t2Feedback.classList.add("shake");
+      }
+      if (!firstInvalidEl) firstInvalidEl = t2Box;
+    }
+
+    // If any validation failed, block start and auto-scroll to the first invalid element
+    if (errors.length > 0) {
+      const banner = $("startValidationMsg");
+      if (banner) {
+        banner.innerHTML = `
+          <h4>⚠️ Lütfen eksik alanları tamamlayın (${errors.length} uyarı):</h4>
+          <ul>
+            ${errors.map(err => `<li>${err}</li>`).join("")}
+          </ul>
+        `;
+        banner.style.display = "block";
+      }
+
+      showToast("Lütfen oyunu başlatmadan önce eksik alanları tamamlayın!", "error");
+
+      if (firstInvalidEl) {
+        firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (firstInvalidEl.tagName === 'INPUT') {
+          setTimeout(() => {
+            firstInvalidEl.focus({ preventScroll: true });
+          }, 350);
+        }
+      }
       return;
     }
 
-    const lifelines = { 1: [], 2: [] };
-    document.querySelectorAll(".lifeline-btn.sel").forEach(b => lifelines[b.dataset.team].push(b.dataset.lifeline));
+    // Everything is valid! Save setup and redirect
+    const lifelines = {
+      1: t1Jokers.map(b => b.dataset.lifeline),
+      2: t2Jokers.map(b => b.dataset.lifeline)
+    };
 
     const setup = {
-      gameName: $("gameName").value.trim() || "Özel Maç",
-      team1: $("team1Name").value.trim() || "Birinci Takım",
-      team2: $("team2Name").value.trim() || "İkinci Takım",
+      gameName: gameNameVal,
+      team1: team1Val,
+      team2: team2Val,
       cats: picked.slice(),
       lifelines: lifelines
     };
+
     try {
       localStorage.setItem("setup", JSON.stringify(setup));
       localStorage.setItem("cats", JSON.stringify(picked));
-      localStorage.removeItem("game");            // yeni oyun: eski puanları sil
+      localStorage.removeItem("game"); // Yeni oyun için önceki state'i temizle
     } catch (e) {}
 
     const loader = document.createElement('div');

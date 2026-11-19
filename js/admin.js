@@ -302,7 +302,7 @@
           <div class="cat-card-bottom">
             <span class="cat-q-badge">${qCount} Soru</span>
             <button type="button" class="btn btn-danger btn-sm" onclick="window.SorBakalimAdmin.deleteCategory('${cat.id}')" title="Bu kategoriyi ve tüm sorularını sil">
-              🗑️ Sil
+              Sil
             </button>
           </div>
         </div>
@@ -618,7 +618,7 @@
             <div class="q-text-bold">${escapeHtml(q.question)}</div>
             ${hasImage ? `
               <div class="q-image-thumbnail" onclick="window.SorBakalimAdmin.viewQuestionImage('${q.id}')">
-                🖼️ Görseli Görüntüle
+                Görseli Görüntüle
               </div>
             ` : ''}
           </td>
@@ -631,10 +631,10 @@
           <td class="td-actions">
             <div class="actions-wrap">
               <button type="button" class="btn-table-action btn-edit" onclick="window.SorBakalimAdmin.editQuestion('${q.id}')" title="Soruyu Düzenle">
-                ✏️ Düzenle
+                Düzenle
               </button>
               <button type="button" class="btn-table-action btn-delete" onclick="window.SorBakalimAdmin.deleteQuestion('${q.id}')" title="Soruyu Sil">
-                🗑️ Sil
+                Sil
               </button>
             </div>
           </td>

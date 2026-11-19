@@ -37,14 +37,13 @@ save();
 function renderBoard() {
   if (!CATS || CATS.length === 0) {
     $("boardGrid").innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1.5rem; color: #FFFFFF;">
-        <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">📭</div>
+      <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1.5rem; color: var(--text-main, #241812);">
         <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700;">Aktif Soru Tahtası Bulunamadı</h2>
-        <p style="color: #94A3B8; font-size: 1rem; max-width: 480px; margin: 0 auto 1.5rem;">
-          Yönetim panelinden tüm kategoriler veya sorular silinmiş. Lütfen yönetim panelinden yeni kategoriler ve sorular ekleyin.
+        <p style="color: var(--text-muted, #635147); font-size: 1rem; max-width: 480px; margin: 0 auto 1.5rem;">
+          Seçilen kategorilere ait soru bulunamadı. Lütfen ana sayfadan kategori seçerek yeni bir oyun başlatın.
         </p>
-        <a href="admin.html" style="display:inline-block; padding: 0.75rem 1.5rem; background: #F97316; color: #fff; border-radius: 10px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 15px rgba(249,115,22,0.4);">
-          Yönetim Paneline Git
+        <a href="index.html" class="primary-btn" style="display:inline-block; text-decoration: none;">
+          Ana Sayfaya Dön
         </a>
       </div>
     `;
@@ -80,7 +79,7 @@ function closeModal() { $("questionModal").style.display = "none"; }
 
 function finishGame() {
   const [a, b] = state.score;
-  const result = a === b ? "Berabere! 🤝" : "Kazanan: " + NAMES[a > b ? 0 : 1] + " 🏆";
+  const result = a === b ? "Berabere!" : "Kazanan: " + NAMES[a > b ? 0 : 1] + "";
   $("modalCard").innerHTML = `
     <h3>Oyun Sonucu</h3>
     <div class="final-scores">

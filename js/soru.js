@@ -26,7 +26,7 @@ let secs = TIME, paused = false, view = "q";
 
 function start() {
   if (!cat || !item) {
-    showFatal("Soru veya kategori bulunamadı! Yönetim panelinden silinmiş olabilir.");
+    showFatal("Soru veya kategori bulunamadı.");
     return;
   }
   $("roomTitle").textContent = "Sor Bakalım - " + (setup.gameName || "Özel Maç");
@@ -92,7 +92,7 @@ function showAnswer() {
     <div class="q-sub">${esc(item.q)}</div>
     <div class="q-answer">${esc(item.a)}</div>
     <button class="q-btn q-blue q-left" id="toWho">Hangi takım?</button>
-    <button class="q-btn q-red q-right" id="toQ">Soruya dön ›</button>`;
+    <button class="q-btn q-red q-right" id="toQ">Soruya Dön</button>`;
   $("toWho").onclick = showWho;
   $("toQ").onclick = showQuestion;
 }
@@ -118,7 +118,7 @@ function finish(w) {
   if (w >= 0) game.score[w] += item.p;         // sadece bir takım puan alır
   game.used[key] = 1;
   game.turn = 1 - game.turn;                   // her sorudan sonra sıra değişir
-  game.msg = w >= 0 ? NAMES[w] + " " + item.p + " puan kazandı! 🎉" : "Kimse bilemedi. Puan yok, sıra değişti.";
+  game.msg = w >= 0 ? NAMES[w] + " " + item.p + " puan kazandı!" : "Kimse bilemedi. Puan yok, sıra değişti.";
   try { localStorage.setItem("game", JSON.stringify(game)); } catch (e) {}
   location.href = "game.html";
 }
