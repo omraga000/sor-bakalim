@@ -1426,3 +1426,242 @@ textarea.form-control {
     max-width: 180px;
   }
 }
+
+
+/* ==========================================================================
+   UNIFIED PC LAYOUT ON EVERY DEVICE (phones · tablets · laptops · TVs)
+   --------------------------------------------------------------------------
+   The admin dashboard keeps its desktop structure at every width:
+   one-row header, 4 stat cards in a row, form | list side by side, and a
+   one-row filter bar. Sizes scale with clamp(); rem maxima let TVs scale up.
+   Comes after the older @media rules above, so it overrides them.
+   ========================================================================== */
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+body {
+  overflow-x: clip;
+  max-width: 100%;
+}
+img {
+  max-width: 100%;
+}
+
+/* Header: one row */
+.admin-header {
+  padding: clamp(6px, 1.06vw, 0.85rem) 0;
+}
+.header-container {
+  width: min(86.25rem, 96vw);
+  max-width: none;
+  flex-wrap: nowrap;
+  gap: clamp(6px, 1.9vw, 1.5rem);
+  min-width: 0;
+}
+.brand-link {
+  gap: clamp(4px, 1.06vw, 0.85rem);
+  min-width: 0;
+}
+.brand-logo-img {
+  width: clamp(24px, 3.4vw, 2.75rem);
+  height: clamp(24px, 3.4vw, 2.75rem);
+  flex-shrink: 0;
+}
+.brand-title-wrap {
+  min-width: 0;
+}
+.brand-title {
+  font-size: clamp(0.78rem, 1.75vw, 1.4rem);
+  white-space: nowrap;
+}
+.brand-subtitle {
+  font-size: clamp(0.48rem, 0.94vw, 0.75rem);
+  white-space: nowrap;
+}
+.header-actions {
+  gap: clamp(3px, 0.94vw, 0.75rem);
+  flex-shrink: 0;
+}
+.btn {
+  font-size: clamp(0.56rem, 1.1vw, 0.9rem);
+  padding: clamp(4px, 0.8vw, 0.65rem) clamp(6px, 1.5vw, 1.2rem);
+  gap: clamp(3px, 0.6vw, 0.5rem);
+}
+.btn-sm {
+  font-size: clamp(0.52rem, 1vw, 0.8rem);
+  padding: clamp(3px, 0.5vw, 0.4rem) clamp(5px, 1vw, 0.8rem);
+}
+.btn-icon-only {
+  width: clamp(24px, 2.8vw, 2.25rem);
+  height: clamp(24px, 2.8vw, 2.25rem);
+  padding: clamp(3px, 0.6vw, 0.5rem);
+}
+
+/* Main container */
+.admin-container {
+  width: min(86.25rem, 96vw);
+  max-width: none;
+  padding: 0;
+  margin: clamp(14px, 2.5vw, 2rem) auto;
+  gap: clamp(16px, 3.1vw, 2.5rem);
+}
+
+/* Stats: always 4 cards in one row */
+.stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(5px, 1.56vw, 1.25rem);
+}
+.stat-card {
+  padding: clamp(7px, 1.9vw, 1.5rem);
+  min-width: 0;
+}
+.stat-title {
+  font-size: clamp(0.48rem, 1.06vw, 0.85rem);
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+.stat-icon {
+  width: clamp(20px, 3.4vw, 2.75rem);
+  height: clamp(20px, 3.4vw, 2.75rem);
+  font-size: clamp(0.7rem, 1.7vw, 1.35rem);
+  flex-shrink: 0;
+}
+.stat-value {
+  font-size: clamp(1rem, 2.8vw, 2.25rem);
+}
+.stat-footer,
+.stat-badge {
+  font-size: clamp(0.48rem, 0.95vw, 0.78rem);
+  flex-wrap: wrap;
+}
+.stat-card-wide {
+  padding: clamp(8px, 1.9vw, 1.5rem) clamp(8px, 2.2vw, 1.75rem);
+}
+
+/* Category ranking: 4 per row like on desktop */
+.categories-ranking-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(5px, 1.25vw, 1rem);
+}
+.ranking-item {
+  min-width: 0;
+  padding: clamp(6px, 1.25vw, 1rem);
+}
+.ranking-name,
+.ranking-count {
+  font-size: clamp(0.52rem, 1.06vw, 0.88rem);
+  overflow-wrap: anywhere;
+}
+
+/* Form | content: always side by side (desktop 380px : 1fr proportion) */
+.admin-content-grid,
+.category-mgmt-grid {
+  grid-template-columns: minmax(0, 29fr) minmax(0, 71fr);
+  gap: clamp(8px, 2.2vw, 1.75rem);
+}
+.form-card,
+.table-card {
+  padding: clamp(8px, 2.2vw, 1.75rem);
+  min-width: 0;
+}
+.form-title,
+.table-title {
+  font-size: clamp(0.72rem, 1.6vw, 1.3rem);
+}
+.section-main-title {
+  font-size: clamp(0.9rem, 1.9vw, 1.5rem);
+}
+.section-subtitle {
+  font-size: clamp(0.6rem, 1.1vw, 0.88rem);
+}
+.form-label {
+  font-size: clamp(0.56rem, 1.06vw, 0.85rem);
+}
+.form-control {
+  font-size: clamp(0.62rem, 1.15vw, 0.92rem);
+  padding: clamp(5px, 0.94vw, 0.75rem) clamp(5px, 1.25vw, 1rem);
+  min-width: 0;
+}
+.points-selector {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(3px, 0.8vw, 0.65rem);
+}
+.form-buttons {
+  flex-wrap: wrap;
+  gap: clamp(4px, 0.94vw, 0.75rem);
+}
+
+/* Category cards: 3 per row like on desktop */
+.category-cards-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(5px, 1.25vw, 1rem);
+}
+.cat-admin-card {
+  padding: clamp(6px, 1.56vw, 1.25rem);
+  min-width: 0;
+}
+.cat-card-title {
+  font-size: clamp(0.62rem, 1.3vw, 1.05rem);
+  overflow-wrap: anywhere;
+}
+.cat-card-slug,
+.cat-card-desc,
+.cat-q-badge {
+  font-size: clamp(0.5rem, 0.95vw, 0.8rem);
+  overflow-wrap: anywhere;
+}
+
+/* Filters: one row */
+.filters-bar {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: clamp(4px, 0.94vw, 0.75rem);
+  padding: clamp(5px, 1.06vw, 0.85rem);
+}
+.search-input-wrap {
+  min-width: 0;
+}
+.filter-select {
+  width: auto;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+/* Table keeps its own internal horizontal scroll (component-level only) */
+.table-responsive {
+  max-width: 100%;
+}
+.questions-table {
+  font-size: clamp(0.58rem, 1.1vw, 0.9rem);
+}
+.questions-table th {
+  font-size: clamp(0.5rem, 1vw, 0.8rem);
+  padding: clamp(5px, 1.1vw, 0.9rem) clamp(5px, 1.25vw, 1rem);
+}
+.questions-table td {
+  padding: clamp(5px, 1.1vw, 0.9rem) clamp(5px, 1.25vw, 1rem);
+}
+
+/* Modals & footer */
+.modal-content {
+  width: min(30rem, 92vw);
+  max-width: none;
+}
+.admin-footer {
+  font-size: clamp(0.62rem, 1.06vw, 0.85rem);
+  padding: clamp(12px, 1.9vw, 1.5rem);
+  margin-top: clamp(24px, 5vw, 4rem);
+}
+
+/* TVs & large displays: scale up */
+@media (min-width: 1920px) and (min-height: 900px) {
+  html { font-size: 18px; }
+}
+@media (min-width: 2560px) and (min-height: 1300px) {
+  html { font-size: 22px; }
+}
+@media (min-width: 3400px) and (min-height: 1800px) {
+  html { font-size: 28px; }
+}

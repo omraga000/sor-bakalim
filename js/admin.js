@@ -10,7 +10,8 @@
   const STORAGE_KEYS = {
     CATEGORIES: 'sorBakalimCategories',
     QUESTIONS: 'sorBakalimQuestions',
-    STATS: 'sorBakalimStats'
+    STATS: 'sorBakalimStats',
+    MESSAGES: 'sorBakalimMessages'
   };
 
   // --- STATE ---
@@ -87,6 +88,15 @@
     modalPreviewPic: document.getElementById('modalPreviewPic'),
     closeImageModalBtn: document.getElementById('closeImageModalBtn'),
 
+    // Messages Modal & Buttons
+    viewMessagesBtn: document.getElementById('viewMessagesBtn'),
+    messagesCountBadge: document.getElementById('messagesCountBadge'),
+    messagesModal: document.getElementById('messagesModal'),
+    modalMessagesCount: document.getElementById('modalMessagesCount'),
+    clearAllMessagesBtn: document.getElementById('clearAllMessagesBtn'),
+    messagesListContainer: document.getElementById('messagesListContainer'),
+    closeMessagesModalBtn: document.getElementById('closeMessagesModalBtn'),
+
     // Toast Container
     toastContainer: document.getElementById('toastContainer')
   };
@@ -101,6 +111,7 @@
     populateCategoryDropdowns();
     renderStats();
     renderQuestionsTable();
+    updateMessagesBadge();
     setupEventListeners();
   }
 
@@ -952,6 +963,120 @@
   }
 
   // ==========================================================================
+  // INCOMING CONTACT MESSAGES (sorBakalimMessages)
+  // ==========================================================================
+
+  function getStoredMessages() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.MESSAGES);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  }
+
+  function saveStoredMessages(list) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(list));
+    } catch (e) {
+      console.warn('Mesajlar kaydedilemedi:', e);
+    }
+  }
+
+  function updateMessagesBadge() {
+    const list = getStoredMessages();
+    if (el.messagesCountBadge) {
+      el.messagesCountBadge.textContent = list.length;
+      el.messagesCountBadge.style.display = list.length > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  function renderMessagesList() {
+    const list = getStoredMessages();
+    if (el.modalMessagesCount) {
+      el.modalMessagesCount.textContent = `${list.length} Mesaj`;
+    }
+    if (el.clearAllMessagesBtn) {
+      el.clearAllMessagesBtn.style.display = list.length > 0 ? 'inline-block' : 'none';
+    }
+
+    if (!el.messagesListContainer) return;
+
+    if (list.length === 0) {
+      el.messagesListContainer.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-muted); background: #FFF9F2; border: 2px dashed var(--border-color); border-radius: var(--radius-md);">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
+          <h4 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Gelen Mesaj Yok</h4>
+          <p style="font-size: 0.9rem; margin: 0;">iletisim.html sayfasından gönderilen form mesajları burada listelenir.</p>
+        </div>
+      `;
+      return;
+    }
+
+    el.messagesListContainer.innerHTML = list.map((msg, idx) => {
+      const safeName = escapeHtml(msg.name || 'İsimsiz');
+      const safeEmail = escapeHtml(msg.email || '');
+      const safeSubject = escapeHtml(msg.subject || 'Genel İletişim');
+      const safeDate = escapeHtml(msg.dateFormatted || (msg.date ? new Date(msg.date).toLocaleString('tr-TR') : ''));
+      const safeMessage = escapeHtml(msg.message || '');
+      const msgId = msg.id || 'msg_' + idx;
+
+      return `
+        <div class="message-item-card" data-id="${msgId}" style="background: #FFF9F2; border: 2px solid var(--border-color); box-shadow: 0 3px 0 var(--border-color); border-radius: var(--radius-md); padding: 16px; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <span style="display: inline-block; font-size: 0.78rem; font-weight: 800; background: var(--primary-orange-light); color: var(--primary-orange-deep); padding: 2px 8px; border-radius: 9999px; border: 1px solid var(--border-color); margin-bottom: 4px;">
+                ${safeSubject}
+              </span>
+              <h4 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                ${safeName}
+              </h4>
+              <a href="mailto:${safeEmail}" style="font-size: 0.88rem; font-weight: 600; color: var(--primary-orange); text-decoration: underline;">
+                ${safeEmail}
+              </a>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: 6px;">
+                ${safeDate}
+              </span>
+              <button type="button" class="btn btn-danger btn-sm" onclick="window.SorBakalimAdmin.deleteSingleMessage('${msgId}')" title="Bu mesajı sil" style="padding: 4px 10px; font-size: 0.78rem;">
+                Sil
+              </button>
+            </div>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px; font-size: 0.92rem; font-weight: 500; color: var(--text-main); white-space: pre-wrap; line-height: 1.45;">
+            ${safeMessage}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openMessagesModal() {
+    renderMessagesList();
+    openModal(el.messagesModal);
+  }
+
+  function deleteSingleMessage(msgId) {
+    let list = getStoredMessages();
+    list = list.filter(m => m.id !== msgId);
+    saveStoredMessages(list);
+    updateMessagesBadge();
+    renderMessagesList();
+    showToast('Mesaj başarıyla silindi.', 'info');
+  }
+
+  function clearAllMessages() {
+    if (!confirm('Tüm gelen mesajları kalıcı olarak silmek istediğinize emin misiniz?')) return;
+    saveStoredMessages([]);
+    updateMessagesBadge();
+    renderMessagesList();
+    showToast('Tüm mesajlar temizlendi.', 'info');
+  }
+
+  // ==========================================================================
   // EVENT LISTENERS
   // ==========================================================================
 
@@ -1064,6 +1189,17 @@
       el.exportJsonBtn.addEventListener('click', exportAllDataJson);
     }
 
+    // Messages Modal Listeners
+    if (el.viewMessagesBtn) {
+      el.viewMessagesBtn.addEventListener('click', openMessagesModal);
+    }
+    if (el.closeMessagesModalBtn) {
+      el.closeMessagesModalBtn.addEventListener('click', () => closeModal(el.messagesModal));
+    }
+    if (el.clearAllMessagesBtn) {
+      el.clearAllMessagesBtn.addEventListener('click', clearAllMessages);
+    }
+
     // Quick Add button
     if (el.quickAddBtn) {
       el.quickAddBtn.addEventListener('click', () => {
@@ -1077,6 +1213,7 @@
       if (e.target === el.deleteModal) closeModal(el.deleteModal);
       if (e.target === el.deleteCategoryModal) closeModal(el.deleteCategoryModal);
       if (e.target === el.imageModal) closeModal(el.imageModal);
+      if (e.target === el.messagesModal) closeModal(el.messagesModal);
     });
 
     window.addEventListener('keydown', (e) => {
@@ -1084,6 +1221,7 @@
         closeModal(el.deleteModal);
         closeModal(el.deleteCategoryModal);
         closeModal(el.imageModal);
+        closeModal(el.messagesModal);
       }
     });
   }
@@ -1099,7 +1237,8 @@
     editQuestion: startEditQuestion,
     deleteQuestion: promptDeleteQuestion,
     viewImage: viewImageModal,
-    viewQuestionImage: viewQuestionImage
+    viewQuestionImage: viewQuestionImage,
+    deleteSingleMessage: deleteSingleMessage
   };
 
   // Run on DOM ready

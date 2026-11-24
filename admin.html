@@ -38,6 +38,9 @@
         <a href="#soruFormuBolumu" class="btn btn-primary btn-sm" id="quickAddBtn" title="Yeni Soru Ekle">
           Soru Ekle
         </a>
+        <button type="button" class="btn btn-secondary btn-sm" id="viewMessagesBtn" title="Gelen İletişim Mesajlarını Görüntüle">
+          Mesajlar <span class="badge" id="messagesCountBadge" style="background: var(--primary-orange); color:#fff; border-radius: 9999px; padding: 2px 7px; font-size: 0.75rem; margin-left: 4px;">0</span>
+        </button>
         <button type="button" class="btn btn-secondary btn-sm" id="exportJsonBtn" title="Tüm verileri JSON dosyası olarak indir">
           Dışa Aktar
         </button>
@@ -483,6 +486,29 @@
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Vazgeç</button>
         <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Evet, Sil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       INCOMING CONTACT MESSAGES MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="messagesModal" role="dialog" aria-modal="true" aria-labelledby="messagesModalTitle">
+    <div class="modal-content messages-modal-content" style="max-width: 760px; width: 95%;">
+      <div class="messages-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid var(--border-dark); padding-bottom: 14px;">
+        <h3 class="modal-title" id="messagesModalTitle" style="display: flex; align-items: center; gap: 8px; margin: 0;">
+          <span>✉️ Gelen İletişim Mesajları</span>
+          <span class="stat-badge badge-growth" id="modalMessagesCount">0 Mesaj</span>
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" id="clearAllMessagesBtn" title="Tüm mesajları sil" style="display: none;">Tümünü Temizle</button>
+      </div>
+
+      <div class="messages-list-wrap" id="messagesListContainer" style="max-height: 480px; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Dinamik olarak admin.js tarafından doldurulur -->
+      </div>
+
+      <div class="modal-actions" style="margin-top: 20px;">
+        <button type="button" class="btn btn-secondary" id="closeMessagesModalBtn" style="width: 100%;">Kapat</button>
       </div>
     </div>
   </div>

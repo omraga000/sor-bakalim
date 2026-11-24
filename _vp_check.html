@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>vp</title></head>
+<body style="margin:0">
+<pre id="out">running</pre>
+<div id="host"></div>
+<script>
+const pages = ["index.html","game.html","soru.html?c=tarih&i=0","giris.html","kayit.html","iletisim.html","admin.html"];
+const sizes = [[320,568],[375,667],[390,844],[667,375],[768,1024],[1024,768],[1366,768],[1920,1080],[3840,2160]];
+const rows = [];
+let jobs = [];
+pages.forEach(p => sizes.forEach(s => jobs.push([p, s])));
+function run(i) {
+  if (i >= jobs.length) { document.getElementById("out").textContent = "DONE\n" + rows.join("\n"); document.title = "DONE"; return; }
+  const [p, [w, h]] = jobs[i];
+  const f = document.createElement("iframe");
+  f.style.cssText = `width:${w}px;height:${h}px;border:0;position:absolute;left:0;top:0;visibility:hidden`;
+  f.src = "/" + p;
+  f.onload = () => setTimeout(() => {
+    try {
+      const d = f.contentDocument, de = d.documentElement;
+      const sw = Math.max(de.scrollWidth, d.body.scrollWidth), sh = Math.max(de.scrollHeight, d.body.scrollHeight);
+      let wide = [];
+      d.querySelectorAll("body *").forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.width && (r.right > w + 1 || r.left < -1)) {
+          const st = getComputedStyle(el);
+          if (st.position !== "fixed" && !el.closest(".table-responsive") && !el.closest("[style*='display: none']")) wide.push((el.className || el.tagName).toString().slice(0, 30) + "@" + Math.round(r.right));
+        }
+      });
+      rows.push(`${p.padEnd(24)} ${String(w).padStart(4)}x${String(h).padEnd(4)} scrollW=${sw} ${sw > w ? "HSCROLL!" : "ok"} scrollH=${sh} ${p === "game.html" ? (sh > h ? "VSCROLL!" : "fits") : ""} ${wide.length ? "OVER:" + [...new Set(wide)].slice(0, 6).join(",") : ""}`);
+    } catch (e) { rows.push(p + " " + w + " ERR " + e.message); }
+    f.remove(); run(i + 1);
+  }, 700);
+  document.getElementById("host").appendChild(f);
+}
+run(0);
+</script>
+</body></html>

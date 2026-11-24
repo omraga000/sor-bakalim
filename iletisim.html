@@ -10,11 +10,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="light">
 
+<!-- ==========================================================================
+     TOP NAVIGATION BAR (100% Consistent with index.html)
+     ========================================================================== -->
 <header class="topbar">
   <nav class="nav">
-    <a class="logo" href="index.html"><img src="img/logo.png" alt="Sor Bakalım" class="logo-img">Sor Bakalım</a>
+    <a class="logo" href="index.html" title="Sor Bakalım Ana Sayfası">
+      <img src="img/logo.png" alt="Sor Bakalım" class="logo-img">
+      <span>Sor Bakalım</span>
+    </a>
     <a class="play" href="index.html#oyun">Oyna</a>
     <a class="link on" href="iletisim.html">İletişim</a>
     <div class="auth">
@@ -25,69 +31,439 @@
   </nav>
 </header>
 
+<!-- ==========================================================================
+     CONTACT FORM WRAPPER (Warm Sunset Card UI & Unified PC Layout)
+     ========================================================================== -->
 <main class="lg-wrap">
-  <section class="lg-card">
-    <h1>Bize ulaş</h1>
-    <p class="lg-sub">Soru önerin, hata bildirimi ya da fikirleriniz için yazın.</p>
+  <section class="lg-card contact-card">
+    
+    <!-- Card Header -->
+    <div class="contact-card-header">
+      <div class="contact-badge-pill">✉️ Bize Ulaşın</div>
+      <h1>İletişim</h1>
+      <p class="lg-sub">Soru önerisi, hata bildirimi, iş birliği veya fikirleriniz için bizimle iletişime geçin.</p>
+    </div>
 
-    <form id="form" novalidate>
-      <div class="lg-field">
-        <label for="name">Ad Soyad</label>
-        <input class="lg-input" id="name" type="text" placeholder="Adını yaz" autocomplete="name">
+    <!-- Success Confirmation Banner (Displayed upon successful submission) -->
+    <div class="contact-feedback-banner success-banner" id="successBanner" style="display: none;" role="status">
+      <div class="banner-icon-circle success-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h3>Mesajınız başarıyla gönderildi!</h3>
+        <p>Mesajınız doğrudan oyun ekibimize iletildi. En kısa sürede e-posta adresiniz üzerinden sizinle iletişime geçeceğiz.</p>
+        <button type="button" class="banner-action-btn" id="sendAnotherBtn">Yeni Bir Mesaj Gönder</button>
+      </div>
+    </div>
+
+    <!-- Error Alert Banner (Displayed upon validation or API error) -->
+    <div class="contact-feedback-banner error-banner" id="errorBanner" style="display: none;" role="alert">
+      <div class="banner-icon-circle error-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h4 id="errorBannerTitle">Mesaj Gönderilemedi</h4>
+        <p id="errorBannerText">Lütfen formdaki eksik veya geçersiz alanları kontrol ediniz.</p>
+      </div>
+    </div>
+
+    <!-- Contact Form connected directly to Web3Forms API -->
+    <form id="contactForm" novalidate>
+      <!-- Anti-bot honeypot check (Web3Forms botcheck) -->
+      <input type="checkbox" name="botcheck" id="botcheck" style="display: none;" tabindex="-1" autocomplete="off">
+
+      <!-- Field 1: Ad Soyad -->
+      <div class="lg-field" id="fieldWrapName">
+        <label for="name">
+          <span>Ad Soyad</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <input class="lg-input" id="name" name="name" type="text" placeholder="Adınızı ve soyadınızı yazın" autocomplete="name" required>
+        <div class="input-error-msg" id="nameError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="email">E-posta</label>
-        <input class="lg-input" id="email" type="email" placeholder="ornek@mail.com" autocomplete="email">
+      <!-- Field 2: E-posta Adresi -->
+      <div class="lg-field" id="fieldWrapEmail">
+        <label for="email">
+          <span>E-posta Adresi</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <input class="lg-input" id="email" name="email" type="email" placeholder="ornek@alanadi.com" autocomplete="email" required>
+        <div class="input-error-msg" id="emailError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="code">Ülke</label>
-        <select class="lg-input" id="code">
-          <option value="+90" selected>Türkiye (+90)</option>
-          <option value="+965">Kuveyt (+965)</option>
-          <option value="+966">Suudi Arabistan (+966)</option>
-          <option value="+49">Almanya (+49)</option>
-          <option value="+44">Birleşik Krallık (+44)</option>
-          <option value="+1">ABD (+1)</option>
+      <!-- Field 3: Konu -->
+      <div class="lg-field" id="fieldWrapSubject">
+        <label for="subject">
+          <span>Konu</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <select class="lg-input" id="subject" name="subject" required>
+          <option value="" disabled selected>Lütfen bir konu seçiniz...</option>
+          <option value="Soru Önerisi">🎯 Soru Önerisi (Yeni soru tavsiyesi)</option>
+          <option value="Hata Bildirimi">🐛 Hata Bildirimi (Oyundaki teknik bir aksaklık)</option>
+          <option value="Öneri & Geliştirme">💡 Öneri &amp; Geliştirme Fikri</option>
+          <option value="İş Birliği & Sponsorluk">🤝 İş Birliği &amp; Sponsorluk</option>
+          <option value="Genel İletişim">✉️ Genel İletişim / Diğer</option>
         </select>
+        <div class="input-error-msg" id="subjectError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="phone">Telefon numarası</label>
-        <input class="lg-input" id="phone" type="tel" inputmode="numeric" placeholder="5xx xxx xx xx" autocomplete="tel-national">
+      <!-- Field 4: Mesajınız -->
+      <div class="lg-field" id="fieldWrapMessage">
+        <div class="field-label-row">
+          <label for="message">
+            <span>Mesajınız</span>
+            <span class="req-star" title="Zorunlu alan">*</span>
+          </label>
+          <div class="lg-count" id="count">0 / 1000</div>
+        </div>
+        <textarea class="lg-input" id="message" name="message" placeholder="Düşüncelerinizi, önerilerinizi veya hata bildirimini detaylı olarak yazın..." maxlength="1000" rows="5" required></textarea>
+        <div class="input-error-msg" id="messageError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="text">Mesajın</label>
-        <textarea class="lg-input" id="text" placeholder="Mesajını buraya yaz…" maxlength="500"></textarea>
-        <div class="lg-count" id="count">0 / 500</div>
+      <!-- Submit Button with Tactile Hover & Loading State -->
+      <button class="lg-submit" id="submitBtn" type="submit">
+        <span class="btn-spinner-icon" id="btnSpinner" style="display: none;">
+          <svg class="spin-svg" viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.35)" stroke-width="3"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+        </span>
+        <span id="btnText">Mesajı Gönder</span>
+      </button>
+
+      <!-- Security Note -->
+      <div class="contact-secure-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>Bilgileriniz güvendedir ve yalnızca yanıt verilmesi amacıyla kullanılır.</span>
       </div>
-
-      <p class="lg-msg" id="msg" aria-live="polite"></p>
-
-      <button class="lg-submit" type="submit">Gönder</button>
     </form>
   </section>
 </main>
 
+<!-- Floating Toast Container for Interactive Feedback -->
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<!-- ==========================================================================
+     CLIENT-SIDE JAVASCRIPT: Web3Forms API, Strict Validation & Local Storage
+     ========================================================================== -->
 <script>
+(function() {
+  'use strict';
+
+  // --- Configuration ---
+  const WEB3FORMS_ACCESS_KEY = "c699e7e4-f9c9-424f-9d0e-1107cb2e1561";
+  const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
+  const STORAGE_KEY_MESSAGES = "sorBakalimMessages";
+
+  // --- DOM Elements ---
   const $ = id => document.getElementById(id);
-  const msg = $("msg");
+  const form = $("contactForm");
+  const nameInput = $("name");
+  const emailInput = $("email");
+  const subjectInput = $("subject");
+  const messageInput = $("message");
+  const botcheckInput = $("botcheck");
+  const countDisplay = $("count");
+  const submitBtn = $("submitBtn");
+  const btnSpinner = $("btnSpinner");
+  const btnText = $("btnText");
+  const successBanner = $("successBanner");
+  const errorBanner = $("errorBanner");
+  const errorBannerTitle = $("errorBannerTitle");
+  const errorBannerText = $("errorBannerText");
+  const sendAnotherBtn = $("sendAnotherBtn");
 
-  $("text").oninput = () => { $("count").textContent = $("text").value.length + " / 500"; };
+  // Error label elements
+  const nameError = $("nameError");
+  const emailError = $("emailError");
+  const subjectError = $("subjectError");
+  const messageError = $("messageError");
 
-  function fail(text, field) { msg.className = "lg-msg"; msg.textContent = text; field.focus(); }
+  // --- Character Counter ---
+  messageInput.addEventListener("input", () => {
+    const len = messageInput.value.length;
+    countDisplay.textContent = `${len} / 1000`;
+  });
 
-  $("form").onsubmit = e => {
+  // --- Toast Notification Helper (Matches index.html style) ---
+  function showToast(message, type = "info") {
+    let container = $("toastContainer");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toastContainer";
+      container.className = "toast-container";
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+
+    let icon = "ℹ️";
+    if (type === "warning") icon = "⚠️";
+    if (type === "error") icon = "❌";
+    if (type === "success") icon = "✅";
+
+    toast.innerHTML = `<span style="font-size:1.15rem; flex-shrink:0;">${icon}</span><span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add("toast-hiding");
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 250);
+    }, 4000);
+  }
+
+  // --- Email Validation Regex ---
+  function isValidEmail(email) {
+    return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(email);
+  }
+
+  // --- Clear Individual Error Highlight on Input / Change ---
+  function clearFieldError(inputEl, errorEl) {
+    if (inputEl) inputEl.classList.remove("field-error");
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+  }
+
+  [nameInput, emailInput, messageInput].forEach(inp => {
+    inp.addEventListener("input", () => {
+      clearFieldError(inp, $(inp.id + "Error"));
+      if (!document.querySelector(".lg-input.field-error")) {
+        hideErrorBanner();
+      }
+    });
+  });
+
+  subjectInput.addEventListener("change", () => {
+    clearFieldError(subjectInput, subjectError);
+    if (!document.querySelector(".lg-input.field-error")) {
+      hideErrorBanner();
+    }
+  });
+
+  function showErrorBanner(title, text) {
+    errorBannerTitle.textContent = title;
+    errorBannerText.textContent = text;
+    errorBanner.style.display = "flex";
+    errorBanner.classList.remove("shake");
+    void errorBanner.offsetWidth; // retrigger shake
+    errorBanner.classList.add("shake");
+  }
+
+  function hideErrorBanner() {
+    errorBanner.style.display = "none";
+  }
+
+  function showSuccessBanner() {
+    successBanner.style.display = "flex";
+    successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function hideSuccessBanner() {
+    successBanner.style.display = "none";
+  }
+
+  // "Yeni Mesaj Gönder" Button Action
+  if (sendAnotherBtn) {
+    sendAnotherBtn.addEventListener("click", () => {
+      hideSuccessBanner();
+      hideErrorBanner();
+      form.style.display = "block";
+      nameInput.focus();
+    });
+  }
+
+  // --- Set Loading State on Button ---
+  function setLoadingState(isLoading) {
+    if (isLoading) {
+      submitBtn.disabled = true;
+      btnSpinner.style.display = "inline-flex";
+      btnText.textContent = "Gönderiliyor...";
+    } else {
+      submitBtn.disabled = false;
+      btnSpinner.style.display = "none";
+      btnText.textContent = "Mesajı Gönder";
+    }
+  }
+
+  // --- Form Submit Handler ---
+  form.addEventListener("submit", async function(e) {
     e.preventDefault();
-    if (!$("name").value.trim()) return fail("Adını yaz.", $("name"));
-    if (!/^\S+@\S+\.\S+$/.test($("email").value)) return fail("Geçerli bir e-posta gir.", $("email"));
-    if ($("phone").value && !/^\d{7,12}$/.test($("phone").value.replace(/\s/g, ""))) return fail("Geçerli bir telefon numarası gir.", $("phone"));
-    if ($("text").value.trim().length < 10) return fail("Mesaj en az 10 karakter olmalı.", $("text"));
-    msg.className = "lg-msg ok";
-    msg.textContent = "Mesaj gönderme çok yakında aktif olacak.";
-  };
+
+    // Reset previous errors
+    clearFieldError(nameInput, nameError);
+    clearFieldError(emailInput, emailError);
+    clearFieldError(subjectInput, subjectError);
+    clearFieldError(messageInput, messageError);
+    hideErrorBanner();
+    hideSuccessBanner();
+
+    const nameVal = nameInput.value.trim();
+    const emailVal = emailInput.value.trim();
+    const subjectVal = subjectInput.value.trim();
+    const messageVal = messageInput.value.trim();
+
+    const validationErrors = [];
+    let firstInvalidEl = null;
+
+    // 1. Validate Ad Soyad
+    if (!nameVal) {
+      validationErrors.push("Lütfen adınızı ve soyadınızı giriniz.");
+      nameInput.classList.add("field-error");
+      nameError.textContent = "Lütfen adınızı ve soyadınızı giriniz.";
+      nameError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = nameInput;
+    } else if (nameVal.length < 2) {
+      validationErrors.push("Ad Soyad en az 2 karakter olmalıdır.");
+      nameInput.classList.add("field-error");
+      nameError.textContent = "Ad Soyad en az 2 karakter olmalıdır.";
+      nameError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = nameInput;
+    }
+
+    // 2. Validate E-posta
+    if (!emailVal) {
+      validationErrors.push("Lütfen e-posta adresinizi giriniz.");
+      emailInput.classList.add("field-error");
+      emailError.textContent = "Lütfen e-posta adresinizi giriniz.";
+      emailError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = emailInput;
+    } else if (!isValidEmail(emailVal)) {
+      validationErrors.push("Lütfen geçerli bir e-posta adresi giriniz (örnek: ad@alanadi.com).");
+      emailInput.classList.add("field-error");
+      emailError.textContent = "Lütfen geçerli bir e-posta adresi giriniz (örnek: ad@alanadi.com).";
+      emailError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = emailInput;
+    }
+
+    // 3. Validate Konu
+    if (!subjectVal) {
+      validationErrors.push("Lütfen bir iletişim konusu seçiniz.");
+      subjectInput.classList.add("field-error");
+      subjectError.textContent = "Lütfen bir iletişim konusu seçiniz.";
+      subjectError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = subjectInput;
+    }
+
+    // 4. Validate Mesaj
+    if (!messageVal) {
+      validationErrors.push("Lütfen mesajınızı yazınız.");
+      messageInput.classList.add("field-error");
+      messageError.textContent = "Lütfen mesajınızı yazınız.";
+      messageError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = messageInput;
+    } else if (messageVal.length < 10) {
+      validationErrors.push("Mesajınız en az 10 karakter olmalıdır.");
+      messageInput.classList.add("field-error");
+      messageError.textContent = "Mesajınız en az 10 karakter olmalıdır.";
+      messageError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = messageInput;
+    }
+
+    // If validation fails, scroll to first error and block submit
+    if (validationErrors.length > 0) {
+      showErrorBanner(
+        "Lütfen Eksik Alanları Doldurunuz",
+        validationErrors[0]
+      );
+      showToast(validationErrors[0], "error");
+
+      if (firstInvalidEl) {
+        firstInvalidEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          firstInvalidEl.focus({ preventScroll: true });
+        }, 300);
+      }
+      return;
+    }
+
+    // Validation passed -> Prepare payload for Web3Forms API
+    const isBot = botcheckInput ? botcheckInput.checked : false;
+    const payload = {
+      access_key: WEB3FORMS_ACCESS_KEY,
+      name: nameVal,
+      email: emailVal,
+      subject: `[Sor Bakalım - ${subjectVal}] ${nameVal}`,
+      message: messageVal,
+      from_name: "Sor Bakalım İletişim Formu",
+      botcheck: isBot ? "checked" : ""
+    };
+
+    setLoadingState(true);
+
+    try {
+      const response = await fetch(WEB3FORMS_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200 && data.success) {
+        // 1. Store a copy in localStorage (sorBakalimMessages)
+        const savedMessage = {
+          id: "msg_" + Date.now(),
+          name: nameVal,
+          email: emailVal,
+          subject: subjectVal,
+          message: messageVal,
+          date: new Date().toISOString(),
+          dateFormatted: new Intl.DateTimeFormat("tr-TR", {
+            dateStyle: "medium",
+            timeStyle: "short"
+          }).format(new Date())
+        };
+
+        try {
+          const existing = JSON.parse(localStorage.getItem(STORAGE_KEY_MESSAGES) || "[]");
+          existing.unshift(savedMessage);
+          localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(existing));
+        } catch (storageErr) {
+          console.warn("Mesaj yerel hafızaya kaydedilemedi:", storageErr);
+        }
+
+        // 2. Reset the form and counter
+        form.reset();
+        countDisplay.textContent = "0 / 1000";
+
+        // 3. Display on-page confirmation banner
+        showSuccessBanner();
+        showToast("Mesajınız başarıyla gönderildi! En kısa sürede dönüş yapacağız.", "success");
+
+      } else {
+        // API returned error response
+        const errMsg = data.message || "Mesajınız iletilemedi. Lütfen daha sonra tekrar deneyiniz.";
+        showErrorBanner("Mesaj Gönderilemedi", errMsg);
+        showToast(errMsg, "error");
+        // User text is NOT lost
+      }
+    } catch (networkErr) {
+      console.error("Web3Forms gönderim hatası:", networkErr);
+      const netMsg = "İnternet bağlantısı hatası veya sunucuya ulaşılamadı. Lütfen bağlantınızı kontrol edip tekrar deneyiniz.";
+      showErrorBanner("Bağlantı Hatası", netMsg);
+      showToast(netMsg, "error");
+      // User text is NOT lost
+    } finally {
+      setLoadingState(false);
+    }
+  });
+
+})();
 </script>
 </body>
 </html>
