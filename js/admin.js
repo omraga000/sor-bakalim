@@ -6,10 +6,14 @@
 (function () {
   'use strict';
 
-  // --- LOCAL STORAGE KEYS (Ana Oyun ile 100% Senkronize) ---
+  // --- ANTI-REDIRECT GUARD: admin.html'in her zaman doğrudan ve yerinde açılmasını güvence altına al ---
+  if (typeof window !== 'undefined') {
+    window.__IS_ADMIN_PAGE__ = true;
+    window.__PREVENT_REDIRECT__ = true;
+  }
+
+  // --- LOCAL STORAGE KEYS (Sadece İstatistik ve Mesajlar - Kategoriler ve Sorular 100% Supabase'de) ---
   const STORAGE_KEYS = {
-    CATEGORIES: 'sorBakalimCategories',
-    QUESTIONS: 'sorBakalimQuestions',
     STATS: 'sorBakalimStats',
     MESSAGES: 'sorBakalimMessages'
   };
@@ -97,56 +101,73 @@
     messagesListContainer: document.getElementById('messagesListContainer'),
     closeMessagesModalBtn: document.getElementById('closeMessagesModalBtn'),
 
+    // Supabase Cloud Sync UI Elements
+    syncSupabaseBtn: document.getElementById('syncSupabaseBtn'),
+    supabaseSyncStatus: document.getElementById('supabaseSyncStatus'),
+    supabaseStatusText: document.getElementById('supabaseStatusText'),
+
     // Toast Container
     toastContainer: document.getElementById('toastContainer')
   };
 
-  // --- INITIALIZATION ---
-  function init() {
-    loadCategories();
-    loadQuestions();
-    loadStats();
+  // --- SUPABASE STATUS HELPER ---
+  function updateSupabaseStatus(text, statusClass = '') {
+    if (el.supabaseStatusText) el.supabaseStatusText.textContent = text;
+    if (el.supabaseSyncStatus) {
+      el.supabaseSyncStatus.classList.remove('online', 'error');
+      if (statusClass) el.supabaseSyncStatus.classList.add(statusClass);
+    }
+  }
 
-    renderCategoriesGrid();
-    populateCategoryDropdowns();
-    renderStats();
-    renderQuestionsTable();
-    updateMessagesBadge();
-    setupEventListeners();
+  // --- INITIALIZATION ---
+  async function init() {
+    try {
+      loadStats();
+      renderCategoriesGrid();
+      populateCategoryDropdowns();
+      renderStats();
+      renderQuestionsTable();
+      updateMessagesBadge();
+      setupEventListeners();
+
+      // Supabase'den güncel satırları TEK ORTAK FONKSİYONDAN çek (Single Source of Truth)
+      if (window.SorBakalimData && typeof window.SorBakalimData.loadGlobalCategories === 'function') {
+        updateSupabaseStatus("Bağlanıyor...", "");
+        try {
+          const res = await window.SorBakalimData.loadGlobalCategories();
+          if (res && res.success) {
+            categories = window.SorBakalimData.getCategories();
+            questions = window.SorBakalimData.getQuestions();
+            renderCategoriesGrid();
+            populateCategoryDropdowns();
+            renderStats();
+            renderQuestionsTable();
+            updateSupabaseStatus(`Aktif (${res.count} Kategori)`, "online");
+          } else {
+            categories = window.SorBakalimData.getCategories();
+            questions = window.SorBakalimData.getQuestions();
+            renderCategoriesGrid();
+            populateCategoryDropdowns();
+            renderStats();
+            renderQuestionsTable();
+            updateSupabaseStatus("Çevrimdışı / Tablo Bekleniyor", "error");
+          }
+        } catch (err) {
+          console.warn("admin.html Supabase bağlantı uyarısı:", err);
+          updateSupabaseStatus("Bağlantı Hatası", "error");
+        }
+      }
+    } catch (err) {
+      console.error("admin.html başlatılırken yakalanan hata:", err);
+      // Hata olsa bile kesinlikle index.html'e yönlendirme yapma, panel yerinde kalsın
+    }
   }
 
   // ==========================================================================
   // CATEGORIES LOGIC (CRUD)
   // ==========================================================================
 
-  function loadCategories() {
-    if (typeof window.getStoredCategories === 'function') {
-      categories = window.getStoredCategories();
-    } else {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-        if (stored) {
-          categories = JSON.parse(stored);
-        } else {
-          categories = (window.DEFAULT_CATEGORIES || []).slice();
-          saveCategories();
-        }
-      } catch (e) {
-        console.warn("Categories parse error:", e);
-        categories = (window.DEFAULT_CATEGORIES || []).slice();
-      }
-    }
-  }
-
-  function saveCategories() {
-    try {
-      localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-    } catch (e) {
-      showToast("Kategoriler kaydedilirken hata oluştu: " + e.message, "error");
-    }
-  }
-
-  function handleCategorySubmit(e) {
+  async function handleCategorySubmit(e) {
     e.preventDefault();
 
     const name = el.categoryNameInput.value.trim();
@@ -181,11 +202,9 @@
       name: name,
       emoji: emoji,
       img: img,
-      info: info
+      info: info,
+      created_at: new Date().toISOString()
     };
-
-    categories.push(newCategory);
-    saveCategories();
 
     // Reset Form & Base64
     el.categoryForm.reset();
@@ -195,12 +214,33 @@
     if (el.categoryImagePreviewWrap) el.categoryImagePreviewWrap.style.display = 'none';
     if (el.categoryImagePreviewImg) el.categoryImagePreviewImg.src = '';
 
-    showToast(`'${name}' kategorisi başarıyla eklendi! 🎉`, "success");
+    updateSupabaseStatus("Kaydediliyor...", "");
 
-    // Refresh UI
-    renderCategoriesGrid();
-    populateCategoryDropdowns();
-    renderStats();
+    // Doğrudan Supabase'e yaz ve listeyi Supabase'den canlı yenile
+    if (window.SorBakalimData && typeof window.SorBakalimData.saveCategory === 'function') {
+      try {
+        const res = await window.SorBakalimData.saveCategory(newCategory, []);
+        if (res && res.success) {
+          categories = window.SorBakalimData.getCategories();
+          questions = window.SorBakalimData.getQuestions();
+          renderCategoriesGrid();
+          populateCategoryDropdowns();
+          renderStats();
+          renderQuestionsTable();
+
+          showToast(`'${name}' kategorisi Supabase bulut veritabanına kaydedildi! 🌐`, "success");
+          updateSupabaseStatus(`Aktif (${categories.length} Kategori)`, "online");
+        } else {
+          showToast(`Hata: ${res.error || 'Kategori kaydedilemedi'}`, "error");
+          updateSupabaseStatus("Bağlantı Hatası", "error");
+        }
+      } catch (err) {
+        showToast(`Hata: ${err.message || err}`, "error");
+        updateSupabaseStatus("Bağlantı Hatası", "error");
+      }
+    } else {
+      showToast("Supabase senkronizasyon motoru hazır değil.", "error");
+    }
   }
 
   function promptDeleteCategory(catId) {
@@ -226,49 +266,43 @@
     openModal(el.deleteCategoryModal);
   }
 
-  function confirmDeleteCategory() {
+  async function confirmDeleteCategory() {
     if (!categoryPendingDeleteId) return;
 
     const cat = categories.find(c => c.id === categoryPendingDeleteId);
-    if (!cat) {
-      closeModal(el.deleteCategoryModal);
-      return;
-    }
-
-    const catNameLower = cat.name.toLowerCase();
-
-    // 1. Remove category from categories array
-    categories = categories.filter(c => c.id !== categoryPendingDeleteId);
-    saveCategories();
-
-    // 2. Cascade delete all questions belonging to this category
-    const initialQuestionCount = questions.length;
-    questions = questions.filter(q => 
-      q.categoryId !== categoryPendingDeleteId && 
-      (!q.category || q.category.toLowerCase() !== catNameLower)
-    );
-    const deletedQuestionsCount = initialQuestionCount - questions.length;
-    saveQuestions();
-
-    // 3. Clean up user's active picked categories in localStorage if it contained this category
-    try {
-      const storedPicked = JSON.parse(localStorage.getItem("cats"));
-      if (Array.isArray(storedPicked)) {
-        const updatedPicked = storedPicked.filter(id => id !== categoryPendingDeleteId);
-        localStorage.setItem("cats", JSON.stringify(updatedPicked));
-      }
-    } catch (e) {}
-
-    showToast(`'${cat.name}' kategorisi ve ${deletedQuestionsCount} adet soru silindi.`, "info");
+    const catName = cat ? cat.name : categoryPendingDeleteId;
+    const catId = categoryPendingDeleteId;
 
     closeModal(el.deleteCategoryModal);
     categoryPendingDeleteId = null;
 
-    // Refresh all views
-    renderCategoriesGrid();
-    populateCategoryDropdowns();
-    renderStats();
-    renderQuestionsTable();
+    updateSupabaseStatus("Siliniyor...", "");
+
+    // Doğrudan Supabase'den sil ve listeyi Supabase'den canlı yenile
+    if (window.SorBakalimData && typeof window.SorBakalimData.deleteCategory === 'function') {
+      try {
+        const res = await window.SorBakalimData.deleteCategory(catId);
+        if (res && res.success) {
+          categories = window.SorBakalimData.getCategories();
+          questions = window.SorBakalimData.getQuestions();
+          renderCategoriesGrid();
+          populateCategoryDropdowns();
+          renderStats();
+          renderQuestionsTable();
+
+          showToast(`'${catName}' kategorisi Supabase veritabanından kalıcı olarak silindi. 🌐`, "info");
+          updateSupabaseStatus(`Aktif (${categories.length} Kategori)`, "online");
+        } else {
+          showToast(`Silme hatası: ${res.error || 'Silinemedi'}`, "error");
+          updateSupabaseStatus("Bağlantı Hatası", "error");
+        }
+      } catch (err) {
+        showToast(`Silme hatası: ${err.message || err}`, "error");
+        updateSupabaseStatus("Bağlantı Hatası", "error");
+      }
+    } else {
+      showToast("Supabase senkronizasyon motoru hazır değil.", "error");
+    }
   }
 
   function renderCategoriesGrid() {
@@ -282,8 +316,8 @@
       el.categoryCardsGrid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; color: var(--text-dim);">
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏷️</div>
-          <p style="font-weight: 600; color: #FFFFFF;">Henüz kayıtlı kategori bulunmuyor.</p>
-          <p style="font-size: 0.85rem;">Soldaki formu kullanarak yeni bir kategori ekleyin.</p>
+          <p style="font-weight: 600; color: #FFFFFF;">Henüz kategori eklenmemiş.</p>
+          <p style="font-size: 0.85rem;">Soldaki formu kullanarak ilk kategorinizi ekleyebilirsiniz.</p>
         </div>
       `;
       return;
@@ -325,33 +359,6 @@
   // QUESTIONS LOGIC (CRUD)
   // ==========================================================================
 
-  function loadQuestions() {
-    if (typeof window.getStoredQuestions === 'function') {
-      questions = window.getStoredQuestions();
-    } else {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEYS.QUESTIONS);
-        if (stored) {
-          questions = JSON.parse(stored);
-        } else {
-          questions = (window.DEFAULT_QUESTIONS || []).slice();
-          saveQuestions();
-        }
-      } catch (e) {
-        console.warn("Questions parse error:", e);
-        questions = (window.DEFAULT_QUESTIONS || []).slice();
-      }
-    }
-  }
-
-  function saveQuestions() {
-    try {
-      localStorage.setItem(STORAGE_KEYS.QUESTIONS, JSON.stringify(questions));
-    } catch (e) {
-      showToast("Sorular kaydedilirken hata oluştu: " + e.message, "error");
-    }
-  }
-
   function populateCategoryDropdowns() {
     // Populate Question Form Category Select
     if (el.categorySelect) {
@@ -385,7 +392,7 @@
     }
   }
 
-  function handleQuestionSubmit(e) {
+  async function handleQuestionSubmit(e) {
     e.preventDefault();
 
     const categoryId = el.categorySelect.value;
@@ -417,52 +424,45 @@
     const points = pointsRadio ? parseInt(pointsRadio.value, 10) : 200;
     const imageUrl = currentQuestionBase64 || "";
 
-    if (editingQuestionId) {
-      // UPDATE EXISTING
-      const index = questions.findIndex(q => q.id === editingQuestionId);
-      if (index !== -1) {
-        questions[index] = {
-          ...questions[index],
-          categoryId: categoryId,
-          category: categoryName,
-          categoryEmoji: categoryEmoji,
-          points: points,
-          question: questionText,
-          answer: answer,
-          imageUrl: imageUrl,
-          updatedAt: Date.now()
-        };
-        saveQuestions();
-        showToast("Soru başarıyla güncellendi! ✓", "success");
-      } else {
-        showToast("Düzenlenen soru bulunamadı.", "error");
+    const questionObj = {
+      id: editingQuestionId || ("q_" + Date.now() + "_" + Math.floor(Math.random() * 1000)),
+      categoryId: categoryId,
+      category: categoryName,
+      categoryEmoji: categoryEmoji,
+      points: points,
+      question: questionText,
+      answer: answer,
+      imageUrl: imageUrl
+    };
+
+    updateSupabaseStatus("Kaydediliyor...", "");
+    resetQuestionForm();
+
+    // Doğrudan Supabase'e yaz ve listeyi Supabase'den canlı yenile
+    if (window.SorBakalimData && typeof window.SorBakalimData.saveQuestion === 'function') {
+      try {
+        const res = await window.SorBakalimData.saveQuestion(questionObj, categoryId);
+        if (res && res.success) {
+          categories = window.SorBakalimData.getCategories();
+          questions = window.SorBakalimData.getQuestions();
+          renderCategoriesGrid();
+          populateCategoryDropdowns();
+          renderStats();
+          renderQuestionsTable();
+
+          showToast(`Soru Supabase bulut veritabanına kaydedildi! 🌐`, "success");
+          updateSupabaseStatus(`Aktif (${categories.length} Kategori)`, "online");
+        } else {
+          showToast(`Hata: ${res.error || 'Soru kaydedilemedi'}`, "error");
+          updateSupabaseStatus("Bağlantı Hatası", "error");
+        }
+      } catch (err) {
+        showToast(`Hata: ${err.message || err}`, "error");
+        updateSupabaseStatus("Bağlantı Hatası", "error");
       }
-      resetQuestionForm();
     } else {
-      // CREATE NEW QUESTION
-      const newQuestion = {
-        id: "q_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
-        categoryId: categoryId,
-        category: categoryName,
-        categoryEmoji: categoryEmoji,
-        points: points,
-        question: questionText,
-        answer: answer,
-        imageUrl: imageUrl,
-        createdAt: Date.now()
-      };
-
-      questions.unshift(newQuestion);
-      saveQuestions();
-      showToast("Yeni soru başarıyla eklendi! 🎉", "success");
-      resetQuestionForm();
+      showToast("Supabase senkronizasyon motoru hazır değil.", "error");
     }
-
-    // Refresh views
-    renderCategoriesGrid();
-    populateCategoryDropdowns();
-    renderStats();
-    renderQuestionsTable();
   }
 
   function startEditQuestion(id) {
@@ -540,27 +540,47 @@
     openModal(el.deleteModal);
   }
 
-  function confirmDeleteQuestion() {
+  async function confirmDeleteQuestion() {
     if (!questionPendingDeleteId) return;
 
-    const index = questions.findIndex(q => q.id === questionPendingDeleteId);
-    if (index !== -1) {
-      questions.splice(index, 1);
-      saveQuestions();
-      showToast("Soru sistemden ve oyundan silindi.", "info");
-
-      if (editingQuestionId === questionPendingDeleteId) {
-        resetQuestionForm();
-      }
-
-      renderCategoriesGrid();
-      populateCategoryDropdowns();
-      renderStats();
-      renderQuestionsTable();
-    }
+    const q = questions.find(item => item.id === questionPendingDeleteId);
+    const qId = questionPendingDeleteId;
+    const catId = q ? q.categoryId : null;
 
     closeModal(el.deleteModal);
     questionPendingDeleteId = null;
+
+    if (editingQuestionId === qId) {
+      resetQuestionForm();
+    }
+
+    updateSupabaseStatus("Siliniyor...", "");
+
+    // Doğrudan Supabase'den sil ve listeyi Supabase'den canlı yenile
+    if (catId && window.SorBakalimData && typeof window.SorBakalimData.deleteQuestion === 'function') {
+      try {
+        const res = await window.SorBakalimData.deleteQuestion(qId, catId);
+        if (res && res.success) {
+          categories = window.SorBakalimData.getCategories();
+          questions = window.SorBakalimData.getQuestions();
+          renderCategoriesGrid();
+          populateCategoryDropdowns();
+          renderStats();
+          renderQuestionsTable();
+
+          showToast("Soru Supabase bulut veritabanından silindi! 🌐", "info");
+          updateSupabaseStatus(`Aktif (${categories.length} Kategori)`, "online");
+        } else {
+          showToast(`Soru silme hatası: ${res.error || 'Silinemedi'}`, "error");
+          updateSupabaseStatus("Bağlantı Hatası", "error");
+        }
+      } catch (err) {
+        showToast(`Soru silme hatası: ${err.message || err}`, "error");
+        updateSupabaseStatus("Bağlantı Hatası", "error");
+      }
+    } else {
+      showToast("Supabase senkronizasyon motoru hazır değil.", "error");
+    }
   }
 
   function renderQuestionsTable() {
@@ -753,27 +773,26 @@
   // BACKUP & RESET LOGIC
   // ==========================================================================
 
-  function resetAllToDefault() {
-    if (confirm("DİKKAT: Tüm soru ve kategorileri orijinal başlangıç ayarlarına sıfırlamak istediğinize emin misiniz? Eklediğiniz veya düzenlediğiniz tüm özel veriler silinecektir.")) {
-      categories = (window.DEFAULT_CATEGORIES || []).slice();
-      questions = (window.DEFAULT_QUESTIONS || []).slice();
-
-      saveCategories();
-      saveQuestions();
-
-      // Clean setup in localStorage
-      try {
-        localStorage.removeItem("cats");
-        localStorage.removeItem("game");
-      } catch (e) {}
-
-      resetQuestionForm();
-      renderCategoriesGrid();
-      populateCategoryDropdowns();
-      renderStats();
-      renderQuestionsTable();
-
-      showToast("Tüm kategoriler ve sorular varsayılan ayarlara sıfırlandı.", "success");
+  async function resetAllToDefault() {
+    if (confirm("Supabase bulut veritabanındaki güncel kategori ve soruları yeniden çekip ekranı yenilemek istiyor musunuz?")) {
+      if (window.SorBakalimData && typeof window.SorBakalimData.loadGlobalCategories === 'function') {
+        updateSupabaseStatus("Yenileniyor...", "");
+        try {
+          const res = await window.SorBakalimData.loadGlobalCategories(true);
+          categories = window.SorBakalimData.getCategories();
+          questions = window.SorBakalimData.getQuestions();
+          resetQuestionForm();
+          renderCategoriesGrid();
+          populateCategoryDropdowns();
+          renderStats();
+          renderQuestionsTable();
+          updateSupabaseStatus(`Aktif (${categories.length} Kategori)`, "online");
+          showToast("Kategoriler ve sorular Supabase'den başarıyla yenilendi. 🌐", "success");
+        } catch (err) {
+          showToast("Yenileme hatası: " + (err.message || err), "error");
+          updateSupabaseStatus("Bağlantı Hatası", "error");
+        }
+      }
     }
   }
 
@@ -1199,6 +1218,55 @@
     if (el.clearAllMessagesBtn) {
       el.clearAllMessagesBtn.addEventListener('click', clearAllMessages);
     }
+
+    // Supabase Cloud Sync Buttons
+    if (el.syncSupabaseBtn) {
+      el.syncSupabaseBtn.addEventListener('click', async () => {
+        if (!window.SorBakalimData || typeof window.SorBakalimData.loadGlobalCategories !== 'function') {
+          showToast("Supabase senkronizasyon motoru henüz hazır değil.", "warning");
+          return;
+        }
+        updateSupabaseStatus("Eşitleniyor...", "");
+        showToast("Supabase bulut veritabanıyla eşitleniyor...", "info");
+        try {
+          const res = await window.SorBakalimData.loadGlobalCategories(true);
+          categories = window.SorBakalimData.getCategories();
+          questions = window.SorBakalimData.getQuestions();
+          renderCategoriesGrid();
+          populateCategoryDropdowns();
+          renderStats();
+          renderQuestionsTable();
+
+          if (res.success) {
+            updateSupabaseStatus(`Aktif (${res.count} Kategori)`, "online");
+            showToast(`Bulut senkronizasyonu tamamlandı! (${res.count} kategori güncellendi) 🌐`, "success");
+          } else {
+            updateSupabaseStatus("Bağlantı Uyarısı", "error");
+            showToast(`Supabase bulut uyarısı: ${res.error || 'Tablo kontrol ediniz'}`, "warning");
+          }
+        } catch (err) {
+          updateSupabaseStatus("Hata", "error");
+          showToast(`Senkronizasyon hatası: ${err.message || err}`, "error");
+        }
+      });
+    }
+
+    // Live Supabase Sync Event Listener (Triggers when data arrives from cloud)
+    window.addEventListener('sorBakalimDataSynced', (e) => {
+      if (window.SorBakalimData) {
+        categories = window.SorBakalimData.getCategories();
+        questions = window.SorBakalimData.getQuestions();
+      } else {
+        categories = (e.detail && e.detail.categories) || [];
+        questions = (e.detail && e.detail.questions) || [];
+      }
+      renderCategoriesGrid();
+      populateCategoryDropdowns();
+      renderStats();
+      renderQuestionsTable();
+      const count = (e.detail && e.detail.count) || categories.length;
+      updateSupabaseStatus(`Aktif (${count} Kategori)`, "online");
+    });
 
     // Quick Add button
     if (el.quickAddBtn) {

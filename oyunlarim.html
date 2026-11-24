@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oyunlarım · Sor Bakalım</title>
+<link rel="icon" type="image/png" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light">
+
+<!-- ==========================================================================
+     TOPBAR & NAVBAR
+     ========================================================================== -->
+<header class="topbar">
+  <nav class="nav">
+    <a class="logo" href="index.html" title="Sor Bakalım Ana Sayfası">
+      <img src="img/logo.png" alt="Sor Bakalım" class="logo-img">
+      <span>Sor Bakalım</span>
+    </a>
+    <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link on" href="oyunlarim.html">Oyunlarım</a>
+    <a class="link" href="iletisim.html">İletişim</a>
+    <div class="auth" id="navAuth">
+      <a href="giris.html">Giriş Yap</a>
+      <span class="sep"></span>
+      <a href="kayit.html">Hesap Oluştur</a>
+    </div>
+  </nav>
+</header>
+
+<!-- ==========================================================================
+     LIBRARY MAIN CONTAINER
+     ========================================================================== -->
+<main class="library-wrap">
+  
+  <!-- Page Header -->
+  <div class="library-header">
+    <div class="contact-badge-pill" style="background: #FFEDD5; color: var(--brand-orange-deep); margin-bottom: 12px;">
+      📚 Oyun Kütüphanem
+    </div>
+    <h1>Kayıtlı Oyunlarım</h1>
+    <p>Yarım kalan maçlarına devam et veya eski efsane mücadeleleri baştan oyna!</p>
+
+    <!-- Stats Bar -->
+    <div class="library-stats-bar" id="libraryStatsBar">
+      <div class="library-stat-pill">Toplam: <b id="statTotalGames">0</b> Oyun</div>
+      <div class="library-stat-pill">Devam Eden: <b id="statInProgressGames" style="color: #D97706;">0</b></div>
+      <div class="library-stat-pill">Tamamlanan: <b id="statCompletedGames" style="color: #059669;">0</b></div>
+    </div>
+  </div>
+
+  <!-- Guest Notice Banner (Shown when user is not logged in) -->
+  <div class="guest-notice-banner" id="guestNoticeBanner" style="display: none;">
+    <span style="font-size: 1.4rem; flex-shrink: 0;">💡</span>
+    <div>
+      Şu anda <strong>Misafir Modundasınız</strong>. Oyunlarınız bu tarayıcıda yerel olarak saklanmaktadır. Oyunlarınızı profilinize bağlamak için <a href="giris.html">Giriş Yapın</a> veya <a href="kayit.html">Hesap Oluşturun</a>.
+    </div>
+  </div>
+
+  <!-- Empty State (Shown when 0 games are saved) -->
+  <div class="library-empty-state" id="emptyState" style="display: none;">
+    <div class="empty-state-icon">🎲</div>
+    <h3>Henüz Kayıtlı Oyununuz Bulunmuyor</h3>
+    <p>Arkadaşlarınızla ya da ailenizle eğlenceli bir bilgi yarışması başlatın! Oynadığınız tüm maçlar otomatik olarak buraya kaydedilir ve dilediğiniz an kaldığınız yerden devam edebilirsiniz.</p>
+    <a href="index.html#oyun" class="btn-resume" style="max-width: 260px; margin: 0 auto; display: inline-flex;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      <span>Yeni Oyun Başlat</span>
+    </a>
+  </div>
+
+  <!-- Games Cards Grid -->
+  <div class="saved-games-grid" id="savedGamesGrid">
+    <!-- Dinamik olarak renderGames() fonksiyonu tarafından doldurulur -->
+  </div>
+
+</main>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" style="display: none;">
+  <div class="modal-card" style="text-align: center; max-width: 440px;">
+    <div style="font-size: 2.8rem; margin-bottom: 12px;">🗑️</div>
+    <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 900; color: var(--ink-dark); margin-bottom: 8px;">Oyunu Sil</h3>
+    <p style="color: var(--ink-muted); font-size: 0.95rem; font-weight: 600; margin-bottom: 22px;">
+      Bu kayıtlı oyunu kütüphanenizden silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <button type="button" class="btn btn-secondary" id="cancelDeleteBtn" style="padding: 10px 22px;">Vazgeç</button>
+      <button type="button" class="btn btn-danger" id="confirmDeleteBtn" style="padding: 10px 22px; background: var(--t2-primary); color: #fff; border: 2px solid var(--border-dark); box-shadow: 0 3px 0 var(--border-dark); border-radius: var(--radius-full); font-weight: 800; cursor: pointer;">Evet, Sil</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<!-- Supabase JS CDN (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Shared Auth & Dynamic Navbar Module -->
+<script src="js/auth.js"></script>
+
+<!-- ==========================================================================
+     OYUNLARIM JAVASCRIPT LOGIC
+     ========================================================================== -->
+<script>
+(function() {
+  'use strict';
+
+  const STORAGE_KEY = "sorBakalimSavedGames";
+  const $ = id => document.getElementById(id);
+
+  let gamePendingDeleteId = null;
+
+  // Safe HTML string escape
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Toast notification helper
+  function showToast(message, type = "info") {
+    let container = $("toastContainer");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toastContainer";
+      container.className = "toast-container";
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    let icon = "ℹ️";
+    if (type === "warning") icon = "⚠️";
+    if (type === "error") icon = "❌";
+    if (type === "success") icon = "✅";
+
+    toast.innerHTML = `<span style="font-size:1.15rem; flex-shrink:0;">${icon}</span><span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add("toast-hiding");
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 250);
+    }, 3200);
+  }
+
+  // Loading transition overlay helper
+  function showLoadingTransition(title, subtitle, destinationUrl) {
+    const loader = document.createElement("div");
+    loader.className = "loading-overlay";
+    loader.innerHTML = `
+      <div class="loader-content">
+        <div class="spinner"></div>
+        <h2>${escapeHtml(title)}</h2>
+        <p>${escapeHtml(subtitle)}</p>
+      </div>
+    `;
+    document.body.appendChild(loader);
+
+    setTimeout(() => {
+      window.location.href = destinationUrl;
+    }, 700);
+  }
+
+  // Get saved games list from localStorage
+  function getSavedGames() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  // Save games list to localStorage
+  function persistSavedGames(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {
+      console.warn("Oyunlar kaydedilemedi:", e);
+    }
+  }
+
+  // Render Saved Games Grid & Statistics
+  function renderGames() {
+    const list = getSavedGames();
+    const grid = $("savedGamesGrid");
+    const emptyState = $("emptyState");
+
+    // Check auth status for guest notice
+    let isGuest = true;
+    try {
+      const sbToken = localStorage.getItem("sb-fzxrqvobatablbtssggo-auth-token");
+      if (sbToken) {
+        const parsed = JSON.parse(sbToken);
+        if (parsed && parsed.user) isGuest = false;
+      }
+    } catch (_) {}
+
+    $("guestNoticeBanner").style.display = isGuest ? "flex" : "none";
+
+    // Update Stats Pills
+    const inProgressCount = list.filter(g => g.status === "Devam Ediyor").length;
+    const completedCount = list.filter(g => g.status === "Tamamlandı").length;
+    $("statTotalGames").textContent = list.length;
+    $("statInProgressGames").textContent = inProgressCount;
+    $("statCompletedGames").textContent = completedCount;
+
+    if (list.length === 0) {
+      grid.innerHTML = "";
+      grid.style.display = "none";
+      emptyState.style.display = "block";
+      return;
+    }
+
+    emptyState.style.display = "none";
+    grid.style.display = "grid";
+
+    grid.innerHTML = list.map(game => {
+      const isCompleted = game.status === "Tamamlandı";
+      const totalQ = game.totalQuestions || 18;
+      const answeredQ = game.answeredCount || 0;
+      const progressPercent = Math.min(100, Math.round((answeredQ / totalQ) * 100));
+      const team1Score = (game.score && game.score[0]) || 0;
+      const team2Score = (game.score && game.score[1]) || 0;
+      const team1Name = game.team1 || "Birinci Takım";
+      const team2Name = game.team2 || "İkinci Takım";
+      const gameTitle = game.gameName || "Özel Maç";
+      const dateText = game.dateFormatted || (game.createdAt ? new Date(game.createdAt).toLocaleDateString("tr-TR") : "Bilinmiyor");
+
+      // Category tags
+      const catsHtml = (game.categoriesData || []).map(cat => `
+        <span class="game-cat-tag">
+          <span>${escapeHtml(cat.emoji || "❓")}</span>
+          <span>${escapeHtml(cat.name || "")}</span>
+        </span>
+      `).join("");
+
+      return `
+        <div class="saved-game-card" data-id="${escapeHtml(game.id)}">
+          
+          <div>
+            <!-- Header: Title & Badges & Delete -->
+            <div class="game-card-header">
+              <h3 class="game-card-title">${escapeHtml(gameTitle)}</h3>
+              <div class="game-card-top-actions">
+                <span class="game-status-pill ${isCompleted ? 'completed' : 'in-progress'}">
+                  ${isCompleted ? '✓ Tamamlandı' : '⏳ Devam Ediyor'}
+                </span>
+                <button type="button" class="game-delete-btn" onclick="window.SorBakalimLibrary.promptDelete('${escapeHtml(game.id)}')" title="Bu oyunu sil">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div class="game-date-row">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>${escapeHtml(dateText)}</span>
+            </div>
+
+            <!-- Categories Chips -->
+            <div class="game-cats-wrap">
+              ${catsHtml || '<span class="game-cat-tag">Kategoriler kayıtlı</span>'}
+            </div>
+
+            <!-- Teams Scoreboard -->
+            <div class="game-teams-score-box">
+              <div class="game-team-score-col team-1-col">
+                <span class="team-label" title="${escapeHtml(team1Name)}">${escapeHtml(team1Name)}</span>
+                <span class="team-score-pts">${team1Score}</span>
+              </div>
+              <div class="game-vs-badge">VS</div>
+              <div class="game-team-score-col team-2-col">
+                <span class="team-label" title="${escapeHtml(team2Name)}">${escapeHtml(team2Name)}</span>
+                <span class="team-score-pts">${team2Score}</span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="game-progress-wrap">
+              <div class="game-progress-info">
+                <span>İlerleme (${answeredQ}/${totalQ} Soru)</span>
+                <span>%${progressPercent}</span>
+              </div>
+              <div class="game-progress-bar-bg">
+                <div class="game-progress-bar-fill" style="width: ${progressPercent}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="game-card-actions">
+            <button type="button" class="btn-resume" onclick="window.SorBakalimLibrary.resume('${escapeHtml(game.id)}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Kaldığın Yerden Devam Et</span>
+            </button>
+            <button type="button" class="btn-replay" onclick="window.SorBakalimLibrary.replay('${escapeHtml(game.id)}')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              <span>Baştan Oyna</span>
+            </button>
+          </div>
+
+        </div>
+      `;
+    }).join("");
+  }
+
+  // --- 1. Resume Game (Exact progress, scores, answered tiles, turn, lifelines) ---
+  function resumeGame(gameId) {
+    const list = getSavedGames();
+    const match = list.find(g => g.id === gameId);
+    if (!match) {
+      showToast("Oyun kaydı bulunamadı.", "error");
+      return;
+    }
+
+    const setup = match.setup || {
+      gameName: match.gameName,
+      team1: match.team1,
+      team2: match.team2,
+      cats: match.cats,
+      lifelines: match.lifelines,
+      matchId: match.id,
+      createdAt: match.createdAt
+    };
+    setup.matchId = match.id;
+
+    const state = {
+      score: [match.score ? match.score[0] : 0, match.score ? match.score[1] : 0],
+      turn: match.turn || 0,
+      used: match.used || {},
+      msg: `"${match.gameName || 'Özel Maç'}" oyununa kaldığınız yerden devam ediyorsunuz!`
+    };
+
+    try {
+      localStorage.setItem("setup", JSON.stringify(setup));
+      localStorage.setItem("game", JSON.stringify(state));
+      localStorage.setItem("cats", JSON.stringify(match.cats || []));
+    } catch (e) {
+      console.warn("Oyun durumu yüklenemedi:", e);
+    }
+
+    showLoadingTransition("Oyun Yükleniyor...", "Kaldığınız yerden yarışma ekranına geçiliyor!", "game.html");
+  }
+
+  // --- 2. Replay Game (Same categories & teams, scores reset to 0, tiles reset, lifelines fresh) ---
+  function replayGame(gameId) {
+    const list = getSavedGames();
+    const match = list.find(g => g.id === gameId);
+    if (!match) {
+      showToast("Oyun kaydı bulunamadı.", "error");
+      return;
+    }
+
+    const newMatchId = "match_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+
+    const setup = {
+      gameName: match.gameName || "Özel Maç",
+      team1: match.team1 || "Birinci Takım",
+      team2: match.team2 || "İkinci Takım",
+      cats: match.cats || [],
+      lifelines: match.lifelines || { 1: ["double", "call", "pit"], 2: ["double", "call", "pit"] },
+      matchId: newMatchId,
+      createdAt: new Date().toISOString()
+    };
+
+    const state = {
+      score: [0, 0],
+      turn: 0,
+      used: {},
+      msg: `"${match.gameName || 'Özel Maç'}" baştan başlatıldı! Her iki takıma da başarılar dileriz.`
+    };
+
+    try {
+      localStorage.setItem("setup", JSON.stringify(setup));
+      localStorage.setItem("game", JSON.stringify(state));
+      localStorage.setItem("cats", JSON.stringify(match.cats || []));
+    } catch (e) {
+      console.warn("Yeni oyun oluşturulamadı:", e);
+    }
+
+    showLoadingTransition("Oyun Sıfırlanıyor...", "Kategoriler ve takımlar baştan kuruluyor!", "game.html");
+  }
+
+  // --- 3. Delete Game Functionality ---
+  function promptDelete(gameId) {
+    gamePendingDeleteId = gameId;
+    $("deleteModal").style.display = "flex";
+  }
+
+  function closeDeleteModal() {
+    $("deleteModal").style.display = "none";
+    gamePendingDeleteId = null;
+  }
+
+  function confirmDelete() {
+    if (!gamePendingDeleteId) return;
+    let list = getSavedGames();
+    list = list.filter(g => g.id !== gamePendingDeleteId);
+    persistSavedGames(list);
+    closeDeleteModal();
+    renderGames();
+    showToast("Oyun kütüphanenizden silindi.", "info");
+  }
+
+  $("cancelDeleteBtn").onclick = closeDeleteModal;
+  $("confirmDeleteBtn").onclick = confirmDelete;
+
+  window.addEventListener("click", e => {
+    if (e.target === $("deleteModal")) closeDeleteModal();
+  });
+
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeDeleteModal();
+  });
+
+  // Global interface for inline clicks
+  window.SorBakalimLibrary = {
+    resume: resumeGame,
+    replay: replayGame,
+    promptDelete: promptDelete
+  };
+
+  // Initial render on load
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", renderGames);
+  } else {
+    renderGames();
+  }
+
+})();
+</script>
+</body>
+</html>

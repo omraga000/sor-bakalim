@@ -10,14 +10,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="light">
 
+<!-- ==========================================================================
+     TOPBAR & NAVBAR
+     ========================================================================== -->
 <header class="topbar">
   <nav class="nav">
-    <a class="logo" href="index.html"><img src="img/logo.png" alt="Sor Bakalım" class="logo-img">Sor Bakalım</a>
+    <a class="logo" href="index.html" title="Sor Bakalım Ana Sayfası">
+      <img src="img/logo.png" alt="Sor Bakalım" class="logo-img">
+      <span>Sor Bakalım</span>
+    </a>
     <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link" href="oyunlarim.html">Oyunlarım</a>
     <a class="link" href="iletisim.html">İletişim</a>
-    <div class="auth">
+    <div class="auth" id="navAuth">
       <a href="giris.html">Giriş Yap</a>
       <span class="sep"></span>
       <a href="kayit.html" class="on">Hesap Oluştur</a>
@@ -25,108 +32,373 @@
   </nav>
 </header>
 
+<!-- ==========================================================================
+     REGISTRATION CARD
+     ========================================================================== -->
 <main class="lg-wrap">
   <section class="lg-card">
-    <h1> Hesap oluştur </h1>
-    <p class="lg-sub">Birkaç bilgi yeter, hemen oynamaya başla.</p>
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div class="contact-badge-pill" style="background: #FEF3C7; color: var(--brand-orange-deep); margin-bottom: 12px;">
+        🎉 Yeni Oyuncu Kaydı
+      </div>
+      <h1>Hesap Oluştur</h1>
+      <p class="lg-sub" style="margin-bottom: 0;">Birkaç bilgi yeterli, hemen katıl ve yarışmaya başla!</p>
+    </div>
 
-    <form id="form" novalidate>
-      <div class="lg-row">
-        <div class="lg-field">
-          <label for="fname">Ad</label>
-          <input class="lg-input" id="fname" type="text" placeholder="Adın" autocomplete="given-name">
+    <!-- Success Confirmation Banner -->
+    <div class="contact-feedback-banner success-banner" id="successBanner" style="display: none;" role="status">
+      <div class="banner-icon-circle success-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h3 id="successBannerTitle">Hesabınız Başarıyla Oluşturuldu!</h3>
+        <p id="successBannerText">Giriş yapılıyor, yarışma alanına yönlendiriliyorsunuz...</p>
+        <div id="emailConfirmAction" style="display: none; margin-top: 12px;">
+          <a href="giris.html" class="banner-action-btn" style="display: inline-block; text-decoration: none;">Giriş Sayfasına Git</a>
         </div>
-        <div class="lg-field">
-          <label for="lname">Soyad</label>
-          <input class="lg-input" id="lname" type="text" placeholder="Soyadın" autocomplete="family-name">
-        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div class="contact-feedback-banner error-banner shake" id="errorBanner" style="display: none;" role="alert">
+      <div class="banner-icon-circle error-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h4 id="errorBannerTitle">Kayıt Başarısız</h4>
+        <p id="errorBannerText">Lütfen eksik veya geçersiz alanları kontrol ediniz.</p>
+      </div>
+    </div>
+
+    <!-- Registration Form -->
+    <form id="registerForm" novalidate>
+      
+      <!-- Field 1: Ad Soyad / Kullanıcı Adı -->
+      <div class="lg-field" id="fieldWrapFullName">
+        <label for="fullName">
+          <span>Ad Soyad / Kullanıcı Adı</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <input class="lg-input" id="fullName" name="fullName" type="text" placeholder="Örn: Ahmet Yılmaz" autocomplete="name" required>
+        <div class="input-error-msg" id="fullNameError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="email">E-posta</label>
-        <input class="lg-input" id="email" type="email" placeholder="ornek@mail.com" autocomplete="email">
+      <!-- Field 2: E-posta Adresi -->
+      <div class="lg-field" id="fieldWrapEmail">
+        <label for="email">
+          <span>E-posta Adresi</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <input class="lg-input" id="email" name="email" type="email" placeholder="ornek@alanadi.com" autocomplete="email" required>
+        <div class="input-error-msg" id="emailError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="birth">Doğum tarihi</label>
-        <input class="lg-input" id="birth" type="date" autocomplete="bday">
-      </div>
-
-      <div class="lg-field">
-        <label for="code">Ülke</label>
-        <select class="lg-input" id="code">
-          <option value="+90" selected>Türkiye (+90)</option>
-          <option value="+965">Kuveyt (+965)</option>
-          <option value="+966">Suudi Arabistan (+966)</option>
-          <option value="+49">Almanya (+49)</option>
-          <option value="+44">Birleşik Krallık (+44)</option>
-          <option value="+1">ABD (+1)</option>
-        </select>
-      </div>
-
-      <div class="lg-field">
-        <label for="phone">Telefon numarası</label>
-        <input class="lg-input" id="phone" type="tel" inputmode="numeric" placeholder="5xx xxx xx xx" autocomplete="tel-national">
-      </div>
-
-      <div class="lg-field">
-        <label for="pass">Şifre</label>
+      <!-- Field 3: Şifre -->
+      <div class="lg-field" id="fieldWrapPassword">
+        <label for="password">
+          <span>Şifre</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
         <div class="lg-pw">
-          <input class="lg-input" id="pass" type="password" placeholder="En az 6 karakter" autocomplete="new-password">
-          <button type="button" class="lg-toggle" data-for="pass">Göster</button>
+          <input class="lg-input" id="password" name="password" type="password" placeholder="En az 6 karakter" autocomplete="new-password" required>
+          <button type="button" class="lg-toggle" id="togglePassword" data-target="password" title="Şifreyi Göster / Gizle">Göster</button>
         </div>
+        <div class="input-error-msg" id="passwordError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="pass2">Şifre tekrar</label>
+      <!-- Field 4: Şifre Tekrar -->
+      <div class="lg-field" id="fieldWrapPasswordConfirm">
+        <label for="passwordConfirm">
+          <span>Şifre Tekrar</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
         <div class="lg-pw">
-          <input class="lg-input" id="pass2" type="password" placeholder="Şifreni tekrar yaz" autocomplete="new-password">
-          <button type="button" class="lg-toggle" data-for="pass2">Göster</button>
+          <input class="lg-input" id="passwordConfirm" name="passwordConfirm" type="password" placeholder="Şifrenizi tekrar yazın" autocomplete="new-password" required>
+          <button type="button" class="lg-toggle" id="togglePasswordConfirm" data-target="passwordConfirm" title="Şifreyi Göster / Gizle">Göster</button>
         </div>
+        <div class="input-error-msg" id="passwordConfirmError"></div>
       </div>
 
-      <label class="lg-check">
-        <input type="checkbox" id="terms">
-        <span><a href="#">Kullanım şartlarını</a> kabul ediyorum</span>
+      <!-- Terms Checkbox -->
+      <label class="lg-check" style="margin-bottom: 20px;">
+        <input type="checkbox" id="termsCheck" checked>
+        <span><a href="#" onclick="event.preventDefault(); alert('Sor Bakalım eğlenceli ve güvenli bir bilgi yarışması platformudur. Kullanıcı verileri gizlilik esaslarına uygun olarak güvenle saklanır.');">Kullanım şartlarını</a> kabul ediyorum</span>
       </label>
 
-      <p class="lg-msg" id="msg" aria-live="polite"></p>
+      <!-- Submit Button with Spinner -->
+      <button class="lg-submit" id="submitBtn" type="submit">
+        <span class="btn-spinner-icon" id="btnSpinner" style="display: none;">
+          <svg class="spin-svg" viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.35)" stroke-width="3"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+        </span>
+        <span id="btnText">Hesap Oluştur</span>
+      </button>
 
-      <button class="lg-submit" type="submit">Kayıt Ol</button>
-
-      <p class="lg-alt">Zaten hesabın var mı? <a href="giris.html">Giriş yap</a></p>
+      <!-- Bottom Alternative Link -->
+      <p class="lg-alt">
+        Zaten bir hesabın var mı? <a href="giris.html">Giriş Yap</a>
+      </p>
     </form>
   </section>
 </main>
 
-<script>
-  const $ = id => document.getElementById(id);
-  const msg = $("msg");
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
+<!-- Supabase JS CDN (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Shared Auth & Navbar Module -->
+<script src="js/auth.js"></script>
+
+<script>
+(function() {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const form = $("registerForm");
+  const fullNameInput = $("fullName");
+  const emailInput = $("email");
+  const passwordInput = $("password");
+  const passwordConfirmInput = $("passwordConfirm");
+  const termsCheck = $("termsCheck");
+  const submitBtn = $("submitBtn");
+  const btnSpinner = $("btnSpinner");
+  const btnText = $("btnText");
+  const successBanner = $("successBanner");
+  const successBannerTitle = $("successBannerTitle");
+  const successBannerText = $("successBannerText");
+  const emailConfirmAction = $("emailConfirmAction");
+  const errorBanner = $("errorBanner");
+  const errorBannerTitle = $("errorBannerTitle");
+  const errorBannerText = $("errorBannerText");
+
+  // Error labels
+  const fullNameError = $("fullNameError");
+  const emailError = $("emailError");
+  const passwordError = $("passwordError");
+  const passwordConfirmError = $("passwordConfirmError");
+
+  // --- Password Show/Hide Toggles ---
   document.querySelectorAll(".lg-toggle").forEach(btn => {
-    btn.onclick = () => {
-      const input = $(btn.dataset.for);
-      const show = input.type === "password";
-      input.type = show ? "text" : "password";
-      btn.textContent = show ? "Gizle" : "Göster";
-    };
+    btn.addEventListener("click", () => {
+      const targetId = btn.dataset.target;
+      const input = $(targetId);
+      if (!input) return;
+      const isPass = input.type === "password";
+      input.type = isPass ? "text" : "password";
+      btn.textContent = isPass ? "Gizle" : "Göster";
+    });
   });
 
-  function fail(text, field) { msg.className = "lg-msg"; msg.textContent = text; field.focus(); }
+  // --- Email Validation Regex ---
+  function isValidEmail(email) {
+    return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(email);
+  }
 
-  $("form").onsubmit = e => {
+  // --- Clear Error Helpers ---
+  function clearFieldError(inputEl, errorEl) {
+    if (inputEl) inputEl.classList.remove("field-error");
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+  }
+
+  [fullNameInput, emailInput, passwordInput, passwordConfirmInput].forEach(inp => {
+    inp.addEventListener("input", () => {
+      clearFieldError(inp, $(inp.id + "Error"));
+      if (!document.querySelector(".lg-input.field-error")) {
+        hideErrorBanner();
+      }
+    });
+  });
+
+  function showErrorBanner(title, text) {
+    errorBannerTitle.textContent = title;
+    errorBannerText.textContent = text;
+    errorBanner.style.display = "flex";
+    errorBanner.classList.remove("shake");
+    void errorBanner.offsetWidth; // retrigger shake
+    errorBanner.classList.add("shake");
+  }
+
+  function hideErrorBanner() {
+    errorBanner.style.display = "none";
+  }
+
+  function setLoading(isLoading) {
+    if (isLoading) {
+      submitBtn.disabled = true;
+      btnSpinner.style.display = "inline-flex";
+      btnText.textContent = "Hesap Oluşturuluyor...";
+    } else {
+      submitBtn.disabled = false;
+      btnSpinner.style.display = "none";
+      btnText.textContent = "Hesap Oluştur";
+    }
+  }
+
+  // --- Handle Registration Submit ---
+  form.addEventListener("submit", async function(e) {
     e.preventDefault();
-    if (!$("fname").value.trim()) return fail("Adını yaz.", $("fname"));
-    if (!$("lname").value.trim()) return fail("Soyadını yaz.", $("lname"));
-    if (!/^\S+@\S+\.\S+$/.test($("email").value)) return fail("Geçerli bir e-posta gir.", $("email"));
-    if (!$("birth").value || new Date($("birth").value) > new Date()) return fail("Geçerli bir doğum tarihi seç.", $("birth"));
-    if (!/^\d{7,12}$/.test($("phone").value.replace(/\s/g, ""))) return fail("Geçerli bir telefon numarası gir.", $("phone"));
-    if ($("pass").value.length < 6) return fail("Şifre en az 6 karakter olmalı.", $("pass"));
-    if ($("pass").value !== $("pass2").value) return fail("Şifreler aynı değil.", $("pass2"));
-    if (!$("terms").checked) return fail("Devam etmek için şartları kabul etmelisin.", $("terms"));
-    msg.className = "lg-msg ok";
-    msg.textContent = "Hesap oluşturma çok yakında aktif olacak.";
-  };
+
+    clearFieldError(fullNameInput, fullNameError);
+    clearFieldError(emailInput, emailError);
+    clearFieldError(passwordInput, passwordError);
+    clearFieldError(passwordConfirmInput, passwordConfirmError);
+    hideErrorBanner();
+
+    const fullNameVal = fullNameInput.value.trim();
+    const emailVal = emailInput.value.trim();
+    const passwordVal = passwordInput.value;
+    const passwordConfirmVal = passwordConfirmInput.value;
+
+    const errors = [];
+    let firstInvalidEl = null;
+
+    // 1. Full name validation
+    if (!fullNameVal) {
+      errors.push("Lütfen adınızı ve soyadınızı veya kullanıcı adınızı girin.");
+      fullNameInput.classList.add("field-error");
+      fullNameError.textContent = "Lütfen adınızı ve soyadınızı veya kullanıcı adınızı girin.";
+      fullNameError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = fullNameInput;
+    } else if (fullNameVal.length < 2) {
+      errors.push("Ad Soyad en az 2 karakter olmalıdır.");
+      fullNameInput.classList.add("field-error");
+      fullNameError.textContent = "Ad Soyad en az 2 karakter olmalıdır.";
+      fullNameError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = fullNameInput;
+    }
+
+    // 2. Email validation
+    if (!emailVal) {
+      errors.push("Lütfen e-posta adresinizi girin.");
+      emailInput.classList.add("field-error");
+      emailError.textContent = "Lütfen e-posta adresinizi girin.";
+      emailError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = emailInput;
+    } else if (!isValidEmail(emailVal)) {
+      errors.push("Lütfen geçerli bir e-posta adresi girin (örnek: ad@alanadi.com).");
+      emailInput.classList.add("field-error");
+      emailError.textContent = "Lütfen geçerli bir e-posta adresi girin (örnek: ad@alanadi.com).";
+      emailError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = emailInput;
+    }
+
+    // 3. Password validation
+    if (!passwordVal) {
+      errors.push("Lütfen bir şifre belirleyin.");
+      passwordInput.classList.add("field-error");
+      passwordError.textContent = "Lütfen bir şifre belirleyin.";
+      passwordError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = passwordInput;
+    } else if (passwordVal.length < 6) {
+      errors.push("Şifre en az 6 karakter olmalıdır.");
+      passwordInput.classList.add("field-error");
+      passwordError.textContent = "Şifreniz en az 6 karakter olmalıdır.";
+      passwordError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = passwordInput;
+    }
+
+    // 4. Password confirm validation
+    if (!passwordConfirmVal) {
+      errors.push("Lütfen şifrenizi tekrar girin.");
+      passwordConfirmInput.classList.add("field-error");
+      passwordConfirmError.textContent = "Lütfen şifrenizi tekrar girin.";
+      passwordConfirmError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = passwordConfirmInput;
+    } else if (passwordVal !== passwordConfirmVal) {
+      errors.push("Girdiğiniz şifreler birbiriyle eşleşmiyor.");
+      passwordConfirmInput.classList.add("field-error");
+      passwordConfirmError.textContent = "Girdiğiniz şifreler eşleşmiyor.";
+      passwordConfirmError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = passwordConfirmInput;
+    }
+
+    // 5. Terms check
+    if (termsCheck && !termsCheck.checked) {
+      errors.push("Devam etmek için kullanım şartlarını kabul etmelisiniz.");
+      if (!firstInvalidEl) firstInvalidEl = termsCheck;
+    }
+
+    // Fail early if client errors exist
+    if (errors.length > 0) {
+      showErrorBanner("Kayıt Formunda Eksik Alanlar Var", errors[0]);
+      if (firstInvalidEl) {
+        firstInvalidEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          if (firstInvalidEl.tagName === "INPUT") firstInvalidEl.focus({ preventScroll: true });
+        }, 300);
+      }
+      return;
+    }
+
+    // Call Supabase SignUp safely
+    setLoading(true);
+
+    try {
+      if (!window.SorBakalimAuth) {
+        throw new Error("Kimlik doğrulama modülü yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
+      }
+
+      const { data, error } = await window.SorBakalimAuth.signUp(emailVal, passwordVal, fullNameVal);
+
+      if (error) {
+        let msg = error.message;
+        if (error.message.includes("User already registered") || error.message.includes("already exists")) {
+          msg = "Bu e-posta adresi ile zaten kayıtlı bir hesap var. Lütfen giriş yapınız.";
+        } else if (error.message.includes("Password should be at least")) {
+          msg = "Şifreniz en az 6 karakterden oluşmalıdır.";
+        } else if (error.message.includes("rate limit") || error.status === 429) {
+          msg = "Çok fazla istek gönderildi. Lütfen bir dakika bekleyip tekrar deneyin.";
+        }
+        showErrorBanner("Kayıt Başarısız", msg);
+        return;
+      }
+
+      // Check registration result
+      if (data && data.user) {
+        form.style.display = "none";
+
+        if (data.session) {
+          // Instantly logged in
+          successBannerTitle.textContent = "Hesabınız Başarıyla Oluşturuldu!";
+          successBannerText.textContent = `Hoş geldiniz, ${fullNameVal}! Oturumunuz açıldı, ana sayfaya yönlendiriliyorsunuz...`;
+          successBanner.style.display = "flex";
+          successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1400);
+        } else {
+          // Email confirmation is required
+          successBannerTitle.textContent = "Hesabınız Oluşturuldu!";
+          successBannerText.textContent = `Sayın ${fullNameVal}, kaydınız alındı. Lütfen ${emailVal} adresine gönderilen doğrulama e-postasını onaylayıp giriş yapınız.`;
+          emailConfirmAction.style.display = "block";
+          successBanner.style.display = "flex";
+          successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    } catch (err) {
+      console.error("Kayıt işleminde beklenmeyen hata:", err);
+      showErrorBanner("Bağlantı Hatası", "Sunucuya bağlanırken bir sorun oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
+  });
+
+})();
 </script>
 </body>
 </html>

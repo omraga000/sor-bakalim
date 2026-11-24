@@ -6,6 +6,12 @@
   <title>Sor Bakalım - Yönetim Paneli</title>
   <link rel="icon" type="image/png" href="img/logo.png">
 
+  <!-- Anti-Redirect Guard: admin.html doğrudan açıldığında kesinlikle yerinde kalmasını sağlar, index.html yönlendirmesini engeller -->
+  <script>
+    window.__IS_ADMIN_PAGE__ = true;
+    window.__PREVENT_REDIRECT__ = true;
+  </script>
+
   <!-- Google Fonts: Outfit (Brand & Numbers) & Plus Jakarta Sans (Modern UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +19,8 @@
 
   <!-- Admin Custom Stylesheet (Warm Sunset Palette) -->
   <link rel="stylesheet" href="css/admin.css">
+  <!-- Supabase JS CDN (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -32,6 +40,15 @@
 
       <!-- Quick Action Buttons in Top Header -->
       <div class="header-actions">
+        <!-- Supabase Cloud Sync Status -->
+        <div class="supabase-sync-status-badge" id="supabaseSyncStatus" title="Supabase Bulut Senkronizasyon Durumu">
+          <span class="sync-dot"></span>
+          <span>Bulut:</span>
+          <b id="supabaseStatusText">Bağlanıyor...</b>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="syncSupabaseBtn" title="Supabase bulut veritabanındaki güncel verileri çek ve ekranı yenile">
+          🔄 Buluttan Yenile
+        </button>
         <a href="#kategoriBolumu" class="btn btn-secondary btn-sm" title="Kategori Yönetimine Git">
           Kategoriler
         </a>
@@ -44,12 +61,14 @@
         <button type="button" class="btn btn-secondary btn-sm" id="exportJsonBtn" title="Tüm verileri JSON dosyası olarak indir">
           Dışa Aktar
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" id="resetDataBtn" title="Varsayılan orijinal sorulara ve kategorilere sıfırla">
-          Sıfırla
-        </button>
         <a href="index.html" class="btn btn-secondary btn-sm" title="Oyuncu ana sayfasına dön">
           Ana Sayfa
         </a>
+        <div class="auth" id="adminAuthNav">
+          <a href="giris.html">Giriş Yap</a>
+          <span class="sep"></span>
+          <a href="kayit.html">Hesap Oluştur</a>
+        </div>
       </div>
     </div>
   </header>
@@ -540,5 +559,8 @@
 
   <!-- Admin JavaScript Logic -->
   <script src="js/admin.js"></script>
+
+  <!-- Shared Auth Module -->
+  <script src="js/auth.js"></script>
 </body>
 </html>

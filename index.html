@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<!-- Supabase JS CDN (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="light">
 
@@ -16,8 +18,9 @@
   <nav class="nav">
     <a class="logo" href="index.html"><img src="img/logo.png" alt="Sor Bakalım" class="logo-img">Sor Bakalım</a>
     <a class="play on" href="#oyun">Oyna</a>
+    <a class="link" href="oyunlarim.html">Oyunlarım</a>
     <a class="link" href="iletisim.html">İletişim</a>
-    <div class="auth">
+    <div class="auth" id="navAuth">
       <a href="giris.html">Giriş Yap</a>
       <span class="sep"></span>
       <a href="kayit.html">Hesap Oluştur</a>
@@ -199,20 +202,10 @@
   const REQUIRED_CATS = 6;
   const JOKER_MAX = 3;
 
-  // SADECE ve KESİNLİKLE localStorage üzerinden okunur; boşsa ([]) kesinlikle boş döner
-  const CATS = (function() {
-    try {
-      const raw = localStorage.getItem("sorBakalimCategories");
-      if (raw !== null) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {}
-    if (typeof getStoredCategories === "function") {
-      return getStoredCategories();
-    }
-    return [];
-  })();
+  // Kategorileri oku (Sadece Supabase'den canlı çekilir - 100% Online)
+  let CATS = (window.SorBakalimData && typeof window.SorBakalimData.getCategories === "function") 
+    ? window.SorBakalimData.getCategories() 
+    : [];
 
   let picked = [];
   try {
@@ -273,15 +266,6 @@
     }
   } catch (e) {}
 
-  // Render Category Cards
-  $("cards").innerHTML = CATS.length ? CATS.map(c => `
-    <div class="card-flip-wrap"><div class="card" data-id="${c.id}" role="button" tabindex="0" aria-pressed="false">
-        <div class="card-front"><span class="tick" aria-hidden="true">✓</span><button type="button" class="info-btn" title="Bilgi Al (Kartı Çevir)" aria-label="Bilgi">i</button>
-        <div class="card-media">${c.img ? `<img src="${c.img}" alt="${c.name}" class="card-full-img">` : `<div class="card-emoji-fill">${c.emoji || '🎯'}</div>`}</div>
-        <div class="card-title-banner"><span class="card-name">${c.name}</span></div></div>
-        <div class="card-back"><button type="button" class="info-btn flip-back-btn" title="Karta Dön" aria-label="Geri Dön">✕</button><div class="card-back-content"><span class="back-emoji">${c.emoji || '🎯'}</span><h4 class="back-title">${c.name}</h4><div class="back-divider"></div><p class="back-desc">${c.info ? c.info : (c.name + ' hakkında sorular')}</p><span class="back-hint">Seçmek için tıkla</span></div></div>
-      </div></div>`).join("") : '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted, #635147);">Aktif kategori bulunamadı.</div>';
-
   function savePickedCategories() {
     try {
       localStorage.setItem("cats", JSON.stringify(picked));
@@ -298,7 +282,7 @@
       b.classList.toggle("limit-reached", !on && isLimitReached);
     });
 
-    $("count").textContent = "Seçilen: " + picked.length + " / " + MAX_CATS;
+    if ($("count")) $("count").textContent = "Seçilen: " + picked.length + " / " + MAX_CATS;
 
     const indicator = $("categoryStatusIndicator");
     if (indicator) {
@@ -324,66 +308,136 @@
     }
   }
 
-  document.querySelectorAll(".card").forEach(b => {
-    const infoBtn = b.querySelector(".info-btn:not(.flip-back-btn)");
-    if (infoBtn) {
-      infoBtn.onclick = (e) => {
-        e.stopPropagation();
-        b.classList.toggle("flipped");
-      };
-    }
+  function bindCardEvents() {
+    document.querySelectorAll(".card").forEach(b => {
+      const infoBtn = b.querySelector(".info-btn:not(.flip-back-btn)");
+      if (infoBtn) {
+        infoBtn.onclick = (e) => {
+          e.stopPropagation();
+          b.classList.toggle("flipped");
+        };
+      }
 
-    const flipBackBtn = b.querySelector(".flip-back-btn");
-    if (flipBackBtn) {
-      flipBackBtn.onclick = (e) => {
-        e.stopPropagation();
-        b.classList.remove("flipped");
-      };
-    }
+      const flipBackBtn = b.querySelector(".flip-back-btn");
+      if (flipBackBtn) {
+        flipBackBtn.onclick = (e) => {
+          e.stopPropagation();
+          b.classList.remove("flipped");
+        };
+      }
 
-    b.onkeydown = (e) => {
-      if (e.key === "Enter" || e.key === " ") {
+      b.onkeydown = (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (e.target.closest(".info-btn")) return;
+          e.preventDefault();
+          b.click();
+        }
+      };
+
+      b.onclick = (e) => {
         if (e.target.closest(".info-btn")) return;
-        e.preventDefault();
-        b.click();
-      }
-    };
-
-    b.onclick = (e) => {
-      if (e.target.closest(".info-btn")) return;
-      const id = b.dataset.id;
-      $("note").textContent = "";
-      $("note").classList.remove("error", "shake");
-
-      if (picked.includes(id)) {
-        // Deselecting is always allowed
-        picked = picked.filter(x => x !== id);
-        clearCategoryError();
-        savePickedCategories();
-      } else {
-        // Attempting to select
-        if (picked.length >= MAX_CATS) {
-          // Strictly prevent adding 7th category
-          const msg = "En fazla 6 kategori seçebilirsin!";
-          $("note").textContent = msg;
-          $("note").classList.add("error");
-          $("note").classList.remove("shake");
-          void $("note").offsetWidth;
-          $("note").classList.add("shake");
-          showToast("En fazla 6 kategori seçebilirsin!", "warning");
-          return;
+        const id = b.dataset.id;
+        if ($("note")) {
+          $("note").textContent = "";
+          $("note").classList.remove("error", "shake");
         }
-        picked.push(id);
-        savePickedCategories();
-        if (picked.length === REQUIRED_CATS) {
+
+        if (picked.includes(id)) {
+          // Deselecting is always allowed
+          picked = picked.filter(x => x !== id);
           clearCategoryError();
+          savePickedCategories();
+        } else {
+          // Attempting to select
+          if (picked.length >= MAX_CATS) {
+            // Strictly prevent adding 7th category
+            const msg = "En fazla 6 kategori seçebilirsin!";
+            if ($("note")) {
+              $("note").textContent = msg;
+              $("note").classList.add("error");
+              $("note").classList.remove("shake");
+              void $("note").offsetWidth;
+              $("note").classList.add("shake");
+            }
+            showToast("En fazla 6 kategori seçebilirsin!", "warning");
+            return;
+          }
+          picked.push(id);
+          savePickedCategories();
+          if (picked.length === REQUIRED_CATS) {
+            clearCategoryError();
+          }
         }
-      }
-      refresh();
-    };
-  });
+        refresh();
+      };
+    });
+  }
 
-  refresh();
+  // Render Category Cards (Yükleme ve Boş Durumları Dahil)
+  function renderCards(isLoading = false) {
+    const cardsEl = $("cards");
+    if (!cardsEl) return;
+
+    if (isLoading) {
+      cardsEl.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1.5rem;">
+          <div class="spinner" style="margin: 0 auto 1rem; width: 40px; height: 40px; border: 3px solid rgba(240,96,32,0.2); border-top-color: var(--primary-orange); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <p style="font-weight: 700; color: var(--text-main); font-size: 1.05rem; margin: 0 0 0.35rem;">Kategoriler Buluttan Yükleniyor...</p>
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Supabase bulut veritabanına bağlanılıyor</p>
+        </div>
+      `;
+      refresh();
+      return;
+    }
+
+    if (!CATS || CATS.length === 0) {
+      cardsEl.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem; color: var(--text-dim);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🏷️</div>
+          <p style="font-weight: 700; color: var(--text-main); font-size: 1.1rem; margin-bottom: 0.4rem;">Henüz kategori eklenmemiş.</p>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Supabase bulut veritabanında aktif kategori bulunamadı.</p>
+        </div>
+      `;
+      refresh();
+      return;
+    }
+
+    cardsEl.innerHTML = CATS.map(c => `
+      <div class="card-flip-wrap"><div class="card" data-id="${c.id}" role="button" tabindex="0" aria-pressed="false">
+          <div class="card-front"><span class="tick" aria-hidden="true">✓</span><button type="button" class="info-btn" title="Bilgi Al (Kartı Çevir)" aria-label="Bilgi">i</button>
+          <div class="card-media">${c.img ? `<img src="${c.img}" alt="${c.name}" class="card-full-img">` : `<div class="card-emoji-fill">${c.emoji || '🎯'}</div>`}</div>
+          <div class="card-title-banner"><span class="card-name">${c.name}</span></div></div>
+          <div class="card-back"><button type="button" class="info-btn flip-back-btn" title="Karta Dön" aria-label="Geri Dön">✕</button><div class="card-back-content"><span class="back-emoji">${c.emoji || '🎯'}</span><h4 class="back-title">${c.name}</h4><div class="back-divider"></div><p class="back-desc">${c.info ? c.info : (c.name + ' hakkında sorular')}</p><span class="back-hint">Seçmek için tıkla</span></div></div>
+        </div></div>`).join("");
+
+    bindCardEvents();
+    refresh();
+  }
+
+  // Initial render (Önce yükleme durumunu göster)
+  renderCards(true);
+
+  // Supabase'den ortak fonksiyon ile güncel kategorileri çek ve tahtayı yenile
+  if (window.SorBakalimData && typeof window.SorBakalimData.loadGlobalCategories === 'function') {
+    window.SorBakalimData.loadGlobalCategories().then(res => {
+      CATS = (res && res.categories) || [];
+      picked = picked.filter(id => CATS.some(c => c.id === id));
+      renderCards(false);
+    }).catch(err => {
+      console.warn("index.html loadGlobalCategories hatası:", err);
+      CATS = [];
+      renderCards(false);
+    });
+  } else {
+    renderCards(false);
+  }
+
+  // Supabase Küresel Canlı Senkronizasyon Olayı (Yeni kategoriler geldiğinde tahtayı yenile)
+  window.addEventListener('sorBakalimDataSynced', (e) => {
+    CATS = (e.detail && Array.isArray(e.detail.categories)) ? e.detail.categories : [];
+    picked = picked.filter(id => CATS.some(c => c.id === id));
+    renderCards(false);
+  });
 
   // Scroll smooth to categories
   function scrollToCategories() {
@@ -738,7 +792,10 @@
       team1: team1Val,
       team2: team2Val,
       cats: picked.slice(),
-      lifelines: lifelines
+      categoriesData: picked.map(id => (window.QUESTIONS && window.QUESTIONS[id]) || { id }),
+      lifelines: lifelines,
+      matchId: "match_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+      createdAt: new Date().toISOString()
     };
 
     try {
@@ -763,5 +820,6 @@
     }, 1000);
   }
 </script>
+<script src="js/auth.js"></script>
 </body>
 </html>

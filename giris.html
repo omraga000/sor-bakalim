@@ -10,14 +10,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="light">
 
+<!-- ==========================================================================
+     TOPBAR & NAVBAR
+     ========================================================================== -->
 <header class="topbar">
   <nav class="nav">
-    <a class="logo" href="index.html"><img src="img/logo.png" alt="Sor Bakalım" class="logo-img">Sor Bakalım</a>
+    <a class="logo" href="index.html" title="Sor Bakalım Ana Sayfası">
+      <img src="img/logo.png" alt="Sor Bakalım" class="logo-img">
+      <span>Sor Bakalım</span>
+    </a>
     <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link" href="oyunlarim.html">Oyunlarım</a>
     <a class="link" href="iletisim.html">İletişim</a>
-    <div class="auth">
+    <div class="auth" id="navAuth">
       <a href="giris.html" class="on">Giriş Yap</a>
       <span class="sep"></span>
       <a href="kayit.html">Hesap Oluştur</a>
@@ -25,56 +32,290 @@
   </nav>
 </header>
 
+<!-- ==========================================================================
+     LOGIN CARD
+     ========================================================================== -->
 <main class="lg-wrap">
   <section class="lg-card">
-    <h1>Tekrar hoş geldin</h1>
-    <p class="lg-sub">Hesabına giriş yap ve kaldığın yerden devam et.</p>
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div class="contact-badge-pill" style="background: #FFEDD5; color: var(--brand-orange-deep); margin-bottom: 12px;">
+        👋 Tekrar Hoş Geldiniz
+      </div>
+      <h1>Giriş Yap</h1>
+      <p class="lg-sub" style="margin-bottom: 0;">Hesabına giriş yap ve kaldığın yerden yarışmaya devam et.</p>
+    </div>
 
-    <form id="form" novalidate>
-      <div class="lg-field">
-        <label for="email">E-posta</label>
-        <input class="lg-input" id="email" type="email" placeholder="ornek@mail.com" autocomplete="email">
+    <!-- Success Confirmation Banner -->
+    <div class="contact-feedback-banner success-banner" id="successBanner" style="display: none;" role="status">
+      <div class="banner-icon-circle success-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h3 id="successBannerTitle">Giriş Başarılı!</h3>
+        <p id="successBannerText">Hoş geldiniz! Ana sayfaya yönlendiriliyorsunuz...</p>
+      </div>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div class="contact-feedback-banner error-banner shake" id="errorBanner" style="display: none;" role="alert">
+      <div class="banner-icon-circle error-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h4 id="errorBannerTitle">Giriş Yapılamadı</h4>
+        <p id="errorBannerText">Lütfen bilgilerinizi kontrol ediniz.</p>
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" novalidate>
+      
+      <!-- Field 1: E-posta Adresi -->
+      <div class="lg-field" id="fieldWrapEmail">
+        <label for="email">
+          <span>E-posta Adresi</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <input class="lg-input" id="email" name="email" type="email" placeholder="ornek@alanadi.com" autocomplete="email" required>
+        <div class="input-error-msg" id="emailError"></div>
       </div>
 
-      <div class="lg-field">
-        <label for="pass">Şifre</label>
+      <!-- Field 2: Şifre -->
+      <div class="lg-field" id="fieldWrapPassword">
+        <label for="password">
+          <span>Şifre</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
         <div class="lg-pw">
-          <input class="lg-input" id="pass" type="password" placeholder="Şifren" autocomplete="current-password">
-          <button type="button" class="lg-toggle" id="toggle">Göster</button>
+          <input class="lg-input" id="password" name="password" type="password" placeholder="Şifreniz" autocomplete="current-password" required>
+          <button type="button" class="lg-toggle" id="togglePassword" data-target="password" title="Şifreyi Göster / Gizle">Göster</button>
         </div>
+        <div class="input-error-msg" id="passwordError"></div>
       </div>
 
-      <p class="lg-msg" id="msg" aria-live="polite"></p>
-
-      <div class="lg-links">
-        <a class="forgot" href="#">Şifremi unuttum?</a>
+      <!-- Helper Links -->
+      <div class="lg-links" style="margin-bottom: 24px;">
+        <a class="forgot" href="#" id="forgotPasswordBtn">Şifremi unuttum?</a>
         <a class="create" href="kayit.html">Hesap oluştur</a>
       </div>
 
-      <button class="lg-submit" type="submit">Giriş Yap</button>
+      <!-- Submit Button with Spinner -->
+      <button class="lg-submit" id="submitBtn" type="submit">
+        <span class="btn-spinner-icon" id="btnSpinner" style="display: none;">
+          <svg class="spin-svg" viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.35)" stroke-width="3"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+        </span>
+        <span id="btnText">Giriş Yap</span>
+      </button>
+
+      <!-- Bottom Alternative Link -->
+      <p class="lg-alt">
+        Hesabın yok mu? <a href="kayit.html">Hemen hesap oluştur</a>
+      </p>
     </form>
   </section>
 </main>
 
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<!-- Supabase JS CDN (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Shared Auth & Navbar Module -->
+<script src="js/auth.js"></script>
+
 <script>
-  const email = document.getElementById("email");
-  const pass = document.getElementById("pass");
-  const msg = document.getElementById("msg");
+(function() {
+  'use strict';
 
-  document.getElementById("toggle").onclick = e => {
-    const show = pass.type === "password";
-    pass.type = show ? "text" : "password";
-    e.target.textContent = show ? "Gizle" : "Göster";
-  };
+  const $ = id => document.getElementById(id);
+  const form = $("loginForm");
+  const emailInput = $("email");
+  const passwordInput = $("password");
+  const submitBtn = $("submitBtn");
+  const btnSpinner = $("btnSpinner");
+  const btnText = $("btnText");
+  const successBanner = $("successBanner");
+  const errorBanner = $("errorBanner");
+  const errorBannerTitle = $("errorBannerTitle");
+  const errorBannerText = $("errorBannerText");
+  const emailError = $("emailError");
+  const passwordError = $("passwordError");
+  const forgotPasswordBtn = $("forgotPasswordBtn");
 
-  document.getElementById("form").onsubmit = e => {
+  // --- Password Show/Hide Toggle ---
+  const toggleBtn = $("togglePassword");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      const isPass = passwordInput.type === "password";
+      passwordInput.type = isPass ? "text" : "password";
+      toggleBtn.textContent = isPass ? "Gizle" : "Göster";
+    });
+  }
+
+  // --- "Şifremi Unuttum" Helper ---
+  if (forgotPasswordBtn) {
+    forgotPasswordBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      alert("Şifrenizi unuttuysanız lütfen kayıtlı e-posta adresinizle İletişim sayfasından bizimle iletişime geçin. Ekibimiz en kısa sürede yardımcı olacaktır.");
+    });
+  }
+
+  // --- Email Validation Regex ---
+  function isValidEmail(email) {
+    return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(email);
+  }
+
+  // --- Clear Error Helpers ---
+  function clearFieldError(inputEl, errorEl) {
+    if (inputEl) inputEl.classList.remove("field-error");
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+  }
+
+  [emailInput, passwordInput].forEach(inp => {
+    inp.addEventListener("input", () => {
+      clearFieldError(inp, $(inp.id + "Error"));
+      if (!document.querySelector(".lg-input.field-error")) {
+        hideErrorBanner();
+      }
+    });
+  });
+
+  function showErrorBanner(title, text) {
+    errorBannerTitle.textContent = title;
+    errorBannerText.textContent = text;
+    errorBanner.style.display = "flex";
+    errorBanner.classList.remove("shake");
+    void errorBanner.offsetWidth; // retrigger shake
+    errorBanner.classList.add("shake");
+  }
+
+  function hideErrorBanner() {
+    errorBanner.style.display = "none";
+  }
+
+  function setLoading(isLoading) {
+    if (isLoading) {
+      submitBtn.disabled = true;
+      btnSpinner.style.display = "inline-flex";
+      btnText.textContent = "Giriş Yapılıyor...";
+    } else {
+      submitBtn.disabled = false;
+      btnSpinner.style.display = "none";
+      btnText.textContent = "Giriş Yap";
+    }
+  }
+
+  // --- Handle Login Submit ---
+  form.addEventListener("submit", async function(e) {
     e.preventDefault();
-    msg.className = "lg-msg";
-    if (!/^\S+@\S+\.\S+$/.test(email.value)) { msg.textContent = "Geçerli bir e-posta gir."; email.focus(); return; }
-    if (pass.value.length < 6) { msg.textContent = "Şifre en az 6 karakter olmalı."; pass.focus(); return; }
-    msg.className = "lg-msg ok";
-    msg.textContent = "Giriş özelliği çok yakında aktif olacak.";
-  };
+
+    clearFieldError(emailInput, emailError);
+    clearFieldError(passwordInput, passwordError);
+    hideErrorBanner();
+
+    const emailVal = emailInput.value.trim();
+    const passwordVal = passwordInput.value;
+
+    const errors = [];
+    let firstInvalidEl = null;
+
+    // 1. Email validation
+    if (!emailVal) {
+      errors.push("Lütfen e-posta adresinizi giriniz.");
+      emailInput.classList.add("field-error");
+      emailError.textContent = "Lütfen e-posta adresinizi giriniz.";
+      emailError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = emailInput;
+    } else if (!isValidEmail(emailVal)) {
+      errors.push("Lütfen geçerli bir e-posta adresi giriniz (örnek: ad@alanadi.com).");
+      emailInput.classList.add("field-error");
+      emailError.textContent = "Lütfen geçerli bir e-posta adresi giriniz (örnek: ad@alanadi.com).";
+      emailError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = emailInput;
+    }
+
+    // 2. Password validation
+    if (!passwordVal) {
+      errors.push("Lütfen şifrenizi giriniz.");
+      passwordInput.classList.add("field-error");
+      passwordError.textContent = "Lütfen şifrenizi giriniz.";
+      passwordError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = passwordInput;
+    } else if (passwordVal.length < 6) {
+      errors.push("Şifre en az 6 karakter olmalıdır.");
+      passwordInput.classList.add("field-error");
+      passwordError.textContent = "Şifreniz en az 6 karakter olmalıdır.";
+      passwordError.style.display = "block";
+      if (!firstInvalidEl) firstInvalidEl = passwordInput;
+    }
+
+    if (errors.length > 0) {
+      showErrorBanner("Giriş Yapılamadı", errors[0]);
+      if (firstInvalidEl) {
+        firstInvalidEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          if (firstInvalidEl.tagName === "INPUT") firstInvalidEl.focus({ preventScroll: true });
+        }, 300);
+      }
+      return;
+    }
+
+    // Call Supabase SignIn safely
+    setLoading(true);
+
+    try {
+      if (!window.SorBakalimAuth) {
+        throw new Error("Kimlik doğrulama modülü hazır değil. Sayfayı yenileyip tekrar deneyin.");
+      }
+
+      const { data, error } = await window.SorBakalimAuth.signIn(emailVal, passwordVal);
+
+      if (error) {
+        let msg = "E-posta veya şifre hatalı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.";
+        if (error.message && error.message.includes("Email not confirmed")) {
+          msg = "E-posta adresiniz henüz onaylanmamış. Lütfen gelen kutunuzdaki onay bağlantısına tıklayarak hesabınızı aktif ediniz.";
+        } else if (error.message && error.message.includes("Invalid login credentials")) {
+          msg = "E-posta veya şifre hatalı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.";
+        } else if (error.message && error.message.includes("rate limit")) {
+          msg = "Çok fazla başarısız deneme yapıldı. Lütfen biraz bekleyip tekrar deneyiniz.";
+        }
+        showErrorBanner("Giriş Başarısız", msg);
+        passwordInput.classList.add("field-error");
+        return;
+      }
+
+      if (data && data.session) {
+        form.style.display = "none";
+        successBanner.style.display = "flex";
+        successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 1100);
+      }
+    } catch (err) {
+      console.error("Giriş işleminde hata:", err);
+      showErrorBanner("Bağlantı Hatası", "Sunucuya bağlanırken bir sorun oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
+  });
+
+})();
 </script>
 </body>
 </html>

@@ -17,8 +17,8 @@ const game = read("game", null);
 const params = new URLSearchParams(location.search);
 const catId = params.get("c");
 const idx = parseInt(params.get("i"), 10);
-const cat = QUESTIONS[catId];
-const item = cat && cat.items[idx];
+let cat = (window.QUESTIONS || {})[catId];
+let item = cat && cat.items && cat.items[idx];
 const key = catId + "-" + idx;
 const NAMES = [setup.team1 || "Birinci Takım", setup.team2 || "İkinci Takım"];
 
@@ -120,12 +120,71 @@ function finish(w) {
   game.turn = 1 - game.turn;                   // her sorudan sonra sıra değişir
   game.msg = w >= 0 ? NAMES[w] + " " + item.p + " puan kazandı!" : "Kimse bilemedi. Puan yok, sıra değişti.";
   try { localStorage.setItem("game", JSON.stringify(game)); } catch (e) {}
+
+  // Oyun oturumu anlık kütüphane güncellemesi
+  try {
+    const raw = localStorage.getItem("sorBakalimSavedGames");
+    if (raw && setup.matchId) {
+      let list = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        const match = list.find(g => g.id === setup.matchId);
+        if (match) {
+          match.score = [game.score[0] || 0, game.score[1] || 0];
+          match.turn = game.turn;
+          match.used = { ...game.used };
+          match.answeredCount = Object.keys(game.used || {}).length;
+          match.updatedAt = new Date().toISOString();
+          localStorage.setItem("sorBakalimSavedGames", JSON.stringify(list));
+        }
+      }
+    }
+  } catch (_) {}
+
   location.href = "game.html";
 }
 
 /* ---------- başlat (her şey tanımlandıktan sonra) ---------- */
-if (!game || !item || game.used[key]) {
-  location.replace("game.html");               // geçersiz veya oynanmış soru → tahtaya dön
-} else {
-  start();
+function initSoru() {
+  if (!game) {
+    location.replace("game.html");               // oyun oturumu yoksa → tahtaya dön
+    return;
+  }
+  if (game.used && game.used[key]) {
+    location.replace("game.html");               // zaten oynanmış soru → tahtaya dön
+    return;
+  }
+
+  let currentQ = window.QUESTIONS || {};
+  if (Array.isArray(setup.categoriesData)) {
+    const fromSetup = setup.categoriesData.find(c => c && c.id === catId);
+    if (fromSetup && fromSetup.items && fromSetup.items[idx]) {
+      cat = fromSetup;
+      item = fromSetup.items[idx];
+    }
+  }
+  if (!cat || !item) {
+    cat = currentQ[catId];
+    item = cat && cat.items && cat.items[idx];
+  }
+
+  if (cat && item) {
+    start();
+  } else if (window.SorBakalimData && typeof window.SorBakalimData.loadGlobalCategories === 'function') {
+    window.SorBakalimData.loadGlobalCategories().then(() => {
+      const qAfter = window.QUESTIONS || {};
+      cat = qAfter[catId];
+      item = cat && cat.items && cat.items[idx];
+      if (cat && item) {
+        start();
+      } else {
+        location.replace("game.html");
+      }
+    }).catch(() => {
+      location.replace("game.html");
+    });
+  } else {
+    location.replace("game.html");
+  }
 }
+
+initSoru();
