@@ -34,17 +34,19 @@ function getActiveQuestionsMap() {
   return window.QUESTIONS || {};
 }
 
+const MAX_CATEGORIES = 6;
+
 let qMap = getActiveQuestionsMap();
-let ids = Array.isArray(setup.cats) ? setup.cats.filter(id => qMap[id]) : [];
-if (ids.length < 2) ids = Object.keys(qMap).slice(0, 6);
+let ids = Array.isArray(setup.cats) ? setup.cats.filter(id => qMap[id]).slice(0, MAX_CATEGORIES) : [];
+if (ids.length < 2) ids = Object.keys(qMap).slice(0, MAX_CATEGORIES);
 let CATS = ids.map(id => ({ id, ...qMap[id] }));
 const NAMES = [setup.team1 || "Birinci Takım", setup.team2 || "İkinci Takım"];
 let TOTAL = CATS.reduce((n, c) => n + ((c && c.items) ? c.items.length : 0), 0);
 
 function updateGameCategories() {
   const currentQ = getActiveQuestionsMap();
-  ids = Array.isArray(setup.cats) ? setup.cats.filter(id => currentQ[id]) : [];
-  if (ids.length < 2) ids = Object.keys(currentQ).slice(0, 6);
+  ids = Array.isArray(setup.cats) ? setup.cats.filter(id => currentQ[id]).slice(0, MAX_CATEGORIES) : [];
+  if (ids.length < 2) ids = Object.keys(currentQ).slice(0, MAX_CATEGORIES);
   CATS = ids.map(id => ({ id, ...currentQ[id] }));
   TOTAL = CATS.reduce((n, c) => n + ((c && c.items) ? c.items.length : 0), 0);
   renderBoard();

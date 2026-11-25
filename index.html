@@ -20,6 +20,69 @@
     <a class="play on" href="#oyun">Oyna</a>
     <a class="link" href="oyunlarim.html">Oyunlarım</a>
     <a class="link" href="iletisim.html">İletişim</a>
+
+    <!-- Kalan Oyun Hakkı Rozeti ve Oyun Satın Al Açılır Menüsü -->
+    <div class="nav-credits-group" id="navCreditsGroup">
+      <span class="remaining-games-badge credits-loading" id="remainingGamesBadge" data-credits-badge title="Kalan Oyun Hakkınız">
+        <span>🎟️ Kalan Oyun Hakkı:</span>
+        <strong data-credits-count>...</strong>
+      </span>
+      <div class="buy-games-wrap">
+        <button type="button" class="buy-games-btn" id="buyGamesBtn" aria-haspopup="true" aria-expanded="false">
+          <span>🛒 Oyun Satın Al</span>
+          <span class="buy-caret" aria-hidden="true">▼</span>
+        </button>
+        <div class="buy-games-dropdown-menu" id="buyGamesMenu" style="display: none;" role="menu" aria-label="Oyun Paketleri">
+          <div class="buy-dropdown-header">
+            <div class="buy-dropdown-title">Oyun Paketleri</div>
+            <div class="buy-dropdown-sub">Hesabınıza hemen oyun hakkı ekleyin</div>
+          </div>
+          <div class="buy-package-list">
+            <button type="button" class="buy-package-item" data-package-games="1" role="menuitem">
+              <div class="pkg-left">
+                <span class="pkg-icon">🎮</span>
+                <div>
+                  <span class="pkg-name">1 Oyun</span>
+                  <span class="pkg-desc">1 oyun hakkı</span>
+                </div>
+              </div>
+              <span class="pkg-tag">Başlangıç</span>
+            </button>
+            <button type="button" class="buy-package-item" data-package-games="2" role="menuitem">
+              <div class="pkg-left">
+                <span class="pkg-icon">🎯</span>
+                <div>
+                  <span class="pkg-name">2 Oyun</span>
+                  <span class="pkg-desc">2 oyun hakkı</span>
+                </div>
+              </div>
+              <span class="pkg-tag">İkili</span>
+            </button>
+            <button type="button" class="buy-package-item" data-package-games="5" role="menuitem">
+              <div class="pkg-left">
+                <span class="pkg-icon">🔥</span>
+                <div>
+                  <span class="pkg-name">5 Oyun</span>
+                  <span class="pkg-desc">5 oyun hakkı</span>
+                </div>
+              </div>
+              <span class="pkg-tag pkg-popular">Popüler</span>
+            </button>
+            <button type="button" class="buy-package-item" data-package-games="10" role="menuitem">
+              <div class="pkg-left">
+                <span class="pkg-icon">👑</span>
+                <div>
+                  <span class="pkg-name">10 Oyun</span>
+                  <span class="pkg-desc">10 oyun hakkı</span>
+                </div>
+              </div>
+              <span class="pkg-tag pkg-best">Avantajlı</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="auth" id="navAuth">
       <a href="giris.html">Giriş Yap</a>
       <span class="sep"></span>
@@ -184,8 +247,17 @@
 
       <!-- زر ابدأ اللعب النهائي (مع شاشة التحميل) -->
       <div class="final-start-container" style="margin-top: 40px;">
+        <div class="setup-credit-strip">
+          <span class="remaining-games-badge credits-loading" id="setupRemainingGamesBadge" data-credits-badge title="Kalan Oyun Hakkınız">
+            <span>🎟️ Kalan Oyun Hakkı:</span>
+            <strong data-credits-count>...</strong>
+          </span>
+          <button type="button" class="buy-games-btn" onclick="window.SorBakalimCredits && window.SorBakalimCredits.highlightBuyDropdown()">
+            <span>🛒 Oyun Satın Al</span>
+          </button>
+        </div>
         <div id="startValidationMsg" class="start-validation-msg" style="display: none;" role="alert"></div>
-        <button id="finalStartBtn" class="final-start-btn" onclick="startLoadingAndRedirect()">Oyunu Başlat</button>
+        <button id="finalStartBtn" class="final-start-btn" onclick="startLoadingAndRedirect()">Oyuna Başla</button>
       </div>
 
     </div>
@@ -198,8 +270,9 @@
 <script src="js/questions.js"></script>
 
 <script>
-  const MAX_CATS = 6;
-  const REQUIRED_CATS = 6;
+  const MAX_CATEGORIES = 6;
+  const MAX_CATS = MAX_CATEGORIES;
+  const REQUIRED_CATS = MAX_CATEGORIES;
   const JOKER_MAX = 3;
 
   // Kategorileri oku (Sadece Supabase'den canlı çekilir - 100% Online)
@@ -665,8 +738,8 @@
     showToast("Takımlar başarıyla oluşturuldu!", "success");
   };
 
-  // --- Strict Validation Before Starting Game ("Oyunu Başlat") ---
-  function startLoadingAndRedirect() {
+  // --- Strict Validation Before Starting Game ("Oyuna Başla") ---
+  async function startLoadingAndRedirect() {
     const errors = [];
     let firstInvalidEl = null;
 
@@ -781,7 +854,56 @@
       return;
     }
 
-    // Everything is valid! Save setup and redirect
+    // 7. Auth & Game Credits Check (Supabase public.user_game_credits)
+    const startBtn = $("finalStartBtn");
+    if (window.SorBakalimCredits) {
+      if (!window.SorBakalimCredits.isLoggedIn()) {
+        showToast("Oyuna başlamak için lütfen hesabınıza giriş yapın.", "warning");
+        window.SorBakalimCredits.openLoginPromptModal("Oyuna başlamak için lütfen hesabınıza giriş yapın.");
+        return;
+      }
+
+      if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.textContent = "Oyun Hakkı Kontrol Ediliyor...";
+      }
+
+      const creditRes = await window.SorBakalimCredits.consumeGameCredit();
+
+      if (!creditRes || !creditRes.success) {
+        if (startBtn) {
+          startBtn.disabled = false;
+          startBtn.textContent = "Oyuna Başla";
+        }
+
+        if (creditRes && creditRes.needsAuth) {
+          showToast("Oyuna başlamak için lütfen hesabınıza giriş yapın.", "warning");
+          window.SorBakalimCredits.openLoginPromptModal("Oyuna başlamak için lütfen hesabınıza giriş yapın.");
+          return;
+        }
+
+        if (creditRes && creditRes.insufficient) {
+          const banner = $("startValidationMsg");
+          if (banner) {
+            banner.innerHTML = `
+              <h4>⚠️ Oyun krediniz bitti! Yeni oyun oynamak için paket satın almalısınız.</h4>
+              <ul>
+                <li>Üst menüdeki <strong>“Oyun Satın Al”</strong> menüsünden paket seçerek hemen yeni oyun hakkı ekleyebilirsiniz.</li>
+              </ul>
+            `;
+            banner.style.display = "block";
+          }
+          showToast("Oyun krediniz bitti! Yeni oyun oynamak için paket satın almalısınız.", "error");
+          window.SorBakalimCredits.openNoCreditsModal();
+          return;
+        }
+
+        showToast(`Oyun hakkı doğrulanamadı: ${(creditRes && creditRes.error) || "Lütfen tekrar deneyin."}`, "error");
+        return;
+      }
+    }
+
+    // Everything is valid and 1 game credit has been deducted! Save setup and redirect
     const lifelines = {
       1: t1Jokers.map(b => b.dataset.lifeline),
       2: t2Jokers.map(b => b.dataset.lifeline)
@@ -821,5 +943,6 @@
   }
 </script>
 <script src="js/auth.js"></script>
+<script src="js/credits.js"></script>
 </body>
 </html>

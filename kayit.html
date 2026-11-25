@@ -159,6 +159,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Shared Auth & Navbar Module -->
 <script src="js/auth.js"></script>
+<!-- Shared Supabase Game Credits Module -->
+<script src="js/credits.js"></script>
 
 <script>
 (function() {
@@ -369,12 +371,21 @@
 
       // Check registration result
       if (data && data.user) {
+        // Yeni hesap için public.user_game_credits tablosunda 1 ücretsiz oyun hakkı tanımla
+        if (window.SorBakalimCredits && typeof window.SorBakalimCredits.ensureUserCreditsRow === "function") {
+          try {
+            await window.SorBakalimCredits.ensureUserCreditsRow(data.user.id, data.user.email || emailVal);
+          } catch (creditErr) {
+            console.warn("Hoş geldin oyun kredisi kaydı uyarısı:", creditErr);
+          }
+        }
+
         form.style.display = "none";
 
         if (data.session) {
           // Instantly logged in
           successBannerTitle.textContent = "Hesabınız Başarıyla Oluşturuldu!";
-          successBannerText.textContent = `Hoş geldiniz, ${fullNameVal}! Oturumunuz açıldı, ana sayfaya yönlendiriliyorsunuz...`;
+          successBannerText.textContent = `Hoş geldiniz, ${fullNameVal}! 1 ücretsiz oyun hakkınız tanımlandı, ana sayfaya yönlendiriliyorsunuz...`;
           successBanner.style.display = "flex";
           successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -384,7 +395,7 @@
         } else {
           // Email confirmation is required
           successBannerTitle.textContent = "Hesabınız Oluşturuldu!";
-          successBannerText.textContent = `Sayın ${fullNameVal}, kaydınız alındı. Lütfen ${emailVal} adresine gönderilen doğrulama e-postasını onaylayıp giriş yapınız.`;
+          successBannerText.textContent = `Sayın ${fullNameVal}, kaydınız alındı ve 1 ücretsiz oyun hakkınız hazırlandı. Lütfen ${emailVal} adresine gönderilen doğrulama e-postasını onaylayıp giriş yapınız.`;
           emailConfirmAction.style.display = "block";
           successBanner.style.display = "flex";
           successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
