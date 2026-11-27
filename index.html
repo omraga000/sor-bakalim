@@ -288,6 +288,16 @@
 
   const $ = id => document.getElementById(id);
 
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   // Toast notification helper
   function showToast(message, type = "info") {
     let container = document.getElementById("toastContainer");
@@ -306,7 +316,7 @@
     if (type === "error") icon = "❌";
     if (type === "success") icon = "✅";
 
-    toast.innerHTML = `<span style="font-size:1.15rem; flex-shrink:0;">${icon}</span><span>${message}</span>`;
+    toast.innerHTML = `<span style="font-size:1.15rem; flex-shrink:0;">${icon}</span><span>${escapeHtml(message)}</span>`;
     container.appendChild(toast);
 
     setTimeout(() => {
@@ -317,8 +327,12 @@
     }, 3200);
   }
 
-  // Restore saved setup from localStorage if available
+  // Restore saved setup from localStorage if available (and purge finished stale match flags)
   try {
+    const existingGame = JSON.parse(localStorage.getItem("game") || "null");
+    if (existingGame && existingGame.finished) {
+      localStorage.removeItem("game");
+    }
     const savedSetup = JSON.parse(localStorage.getItem("setup"));
     if (savedSetup) {
       if (savedSetup.gameName && $("gameName")) $("gameName").value = savedSetup.gameName;
@@ -476,11 +490,11 @@
     }
 
     cardsEl.innerHTML = CATS.map(c => `
-      <div class="card-flip-wrap"><div class="card" data-id="${c.id}" role="button" tabindex="0" aria-pressed="false">
+      <div class="card-flip-wrap"><div class="card" data-id="${escapeHtml(c.id)}" role="button" tabindex="0" aria-pressed="false">
           <div class="card-front"><span class="tick" aria-hidden="true">✓</span><button type="button" class="info-btn" title="Bilgi Al (Kartı Çevir)" aria-label="Bilgi">i</button>
-          <div class="card-media">${c.img ? `<img src="${c.img}" alt="${c.name}" class="card-full-img">` : `<div class="card-emoji-fill">${c.emoji || '🎯'}</div>`}</div>
-          <div class="card-title-banner"><span class="card-name">${c.name}</span></div></div>
-          <div class="card-back"><button type="button" class="info-btn flip-back-btn" title="Karta Dön" aria-label="Geri Dön">✕</button><div class="card-back-content"><span class="back-emoji">${c.emoji || '🎯'}</span><h4 class="back-title">${c.name}</h4><div class="back-divider"></div><p class="back-desc">${c.info ? c.info : (c.name + ' hakkında sorular')}</p><span class="back-hint">Seçmek için tıkla</span></div></div>
+          <div class="card-media">${c.img ? `<img src="${escapeHtml(c.img)}" alt="${escapeHtml(c.name)}" class="card-full-img">` : `<div class="card-emoji-fill">${escapeHtml(c.emoji || '🎯')}</div>`}</div>
+          <div class="card-title-banner"><span class="card-name">${escapeHtml(c.name)}</span></div></div>
+          <div class="card-back"><button type="button" class="info-btn flip-back-btn" title="Karta Dön" aria-label="Geri Dön">✕</button><div class="card-back-content"><span class="back-emoji">${escapeHtml(c.emoji || '🎯')}</span><h4 class="back-title">${escapeHtml(c.name)}</h4><div class="back-divider"></div><p class="back-desc">${escapeHtml(c.info ? c.info : (c.name + ' hakkında sorular'))}</p><span class="back-hint">Seçmek için tıkla</span></div></div>
         </div></div>`).join("");
 
     bindCardEvents();
@@ -731,15 +745,17 @@
     const t1Name = $("team1Name").value.trim() || "Birinci Takım";
     const t2Name = $("team2Name").value.trim() || "İkinci Takım";
 
-    $("resTeam1").innerHTML = `<strong>${t1Name}</strong><ul>` + team1Players.map(p => `<li>${p}</li>`).join("") + "</ul>";
-    $("resTeam2").innerHTML = `<strong>${t2Name}</strong><ul>` + team2Players.map(p => `<li>${p}</li>`).join("") + "</ul>";
+    $("resTeam1").innerHTML = `<strong>${escapeHtml(t1Name)}</strong><ul>` + team1Players.map(p => `<li>${escapeHtml(p)}</li>`).join("") + "</ul>";
+    $("resTeam2").innerHTML = `<strong>${escapeHtml(t2Name)}</strong><ul>` + team2Players.map(p => `<li>${escapeHtml(p)}</li>`).join("") + "</ul>";
 
     $("generatedTeamsResult").style.display = "block";
     showToast("Takımlar başarıyla oluşturuldu!", "success");
   };
 
   // --- Strict Validation Before Starting Game ("Oyuna Başla") ---
+  let isStartingGame = false;
   async function startLoadingAndRedirect() {
+    if (isStartingGame) return;
     const errors = [];
     let firstInvalidEl = null;
 
@@ -854,8 +870,35 @@
       return;
     }
 
-    // 7. Auth & Game Credits Check (Supabase public.user_game_credits)
+    // 7. Auth, Email Verification & Game Credits Check (Supabase public.user_game_credits)
     const startBtn = $("finalStartBtn");
+    if (window.SorBakalimAuth && typeof window.SorBakalimAuth.getUser === "function") {
+      const authUser = await window.SorBakalimAuth.getUser();
+      if (!authUser) {
+        showToast("Oyuna başlamak için lütfen hesabınıza giriş yapın.", "warning");
+        if (window.SorBakalimCredits) {
+          window.SorBakalimCredits.openLoginPromptModal("Oyuna başlamak için lütfen hesabınıza giriş yapın.");
+        } else {
+          window.location.href = "giris.html";
+        }
+        return;
+      }
+      if (!authUser.email_confirmed_at) {
+        const banner = $("startValidationMsg");
+        if (banner) {
+          banner.innerHTML = `
+            <h4>⚠️ Devam etmek için önce e-posta adresinizi doğrulayın.</h4>
+            <ul>
+              <li>Lütfen gelen kutunuzu (ve spam klasörünü) kontrol edip doğrulama bağlantısına tıklayın.</li>
+            </ul>
+          `;
+          banner.style.display = "block";
+        }
+        showToast("Devam etmek için önce e-posta adresinizi doğrulayın.", "warning");
+        return;
+      }
+    }
+
     if (window.SorBakalimCredits) {
       if (!window.SorBakalimCredits.isLoggedIn()) {
         showToast("Oyuna başlamak için lütfen hesabınıza giriş yapın.", "warning");
@@ -867,38 +910,35 @@
         startBtn.disabled = true;
         startBtn.textContent = "Oyun Hakkı Kontrol Ediliyor...";
       }
+      isStartingGame = true;
 
       const creditRes = await window.SorBakalimCredits.consumeGameCredit();
 
       if (!creditRes || !creditRes.success) {
+        isStartingGame = false;
         if (startBtn) {
           startBtn.disabled = false;
           startBtn.textContent = "Oyuna Başla";
         }
 
         if (creditRes && creditRes.needsAuth) {
-          showToast("Oyuna başlamak için lütfen hesabınıza giriş yapın.", "warning");
+          showToast("Oyun hakkınız kalmadı.", "error");
           window.SorBakalimCredits.openLoginPromptModal("Oyuna başlamak için lütfen hesabınıza giriş yapın.");
           return;
         }
 
-        if (creditRes && creditRes.insufficient) {
-          const banner = $("startValidationMsg");
-          if (banner) {
-            banner.innerHTML = `
-              <h4>⚠️ Oyun krediniz bitti! Yeni oyun oynamak için paket satın almalısınız.</h4>
-              <ul>
-                <li>Üst menüdeki <strong>“Oyun Satın Al”</strong> menüsünden paket seçerek hemen yeni oyun hakkı ekleyebilirsiniz.</li>
-              </ul>
-            `;
-            banner.style.display = "block";
-          }
-          showToast("Oyun krediniz bitti! Yeni oyun oynamak için paket satın almalısınız.", "error");
-          window.SorBakalimCredits.openNoCreditsModal();
-          return;
+        const banner = $("startValidationMsg");
+        if (banner) {
+          banner.innerHTML = `
+            <h4>⚠️ Oyun hakkınız kalmadı.</h4>
+            <ul>
+              <li>Yeni bir oyun başlatabilmek için hesabınızda en az <strong>1 oyun hakkı</strong> bulunmalıdır.</li>
+            </ul>
+          `;
+          banner.style.display = "block";
         }
-
-        showToast(`Oyun hakkı doğrulanamadı: ${(creditRes && creditRes.error) || "Lütfen tekrar deneyin."}`, "error");
+        showToast("Oyun hakkınız kalmadı.", "error");
+        window.SorBakalimCredits.openNoCreditsModal();
         return;
       }
     }

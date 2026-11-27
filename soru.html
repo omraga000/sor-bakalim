@@ -42,7 +42,12 @@
     // dosya eksik veya hatalıysa sebebi ekranda göster
     function showFatal(text) {
       var f = document.getElementById("frame");
-      if (f && !f.children.length) f.innerHTML = '<div class="fatal">⚠️ ' + text + '</div>';
+      if (f && !f.children.length) {
+        var d = document.createElement("div");
+        d.className = "fatal";
+        d.textContent = "⚠️ " + text;
+        f.appendChild(d);
+      }
     }
     window.addEventListener("error", function (e) {
       if (e.target && e.target.tagName === "SCRIPT") showFatal("Dosya bulunamadı: " + e.target.getAttribute("src"));

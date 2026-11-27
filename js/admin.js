@@ -6,10 +6,50 @@
 (function () {
   'use strict';
 
-  // --- ANTI-REDIRECT GUARD: admin.html'in her zaman doğrudan ve yerinde açılmasını güvence altına al ---
-  if (typeof window !== 'undefined') {
-    window.__IS_ADMIN_PAGE__ = true;
-    window.__PREVENT_REDIRECT__ = true;
+  // --- STRICT ADMIN ACCESS CONFIGURATION ---
+  const ADMIN_EMAIL = "sorbakalim.iletisim@outlook.com";
+  const SUPABASE_URL = "https://fzxrqvobatablbtssggo.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_orCsNwYborsnhOhixAez_Q_H_Aw73tM";
+
+  function getAdminSupabaseClient() {
+    if (window.SorBakalimAuth && typeof window.SorBakalimAuth.getClient === 'function') {
+      const authClient = window.SorBakalimAuth.getClient();
+      if (authClient) return authClient;
+    }
+    if (window.supabaseClient) return window.supabaseClient;
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      try {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
+        return window.supabaseClient;
+      } catch (e) {
+        console.error("Admin Supabase istemcisi başlatılamadı:", e);
+      }
+    }
+    return null;
+  }
+
+  function isAuthorizedAdmin(session) {
+    return Boolean(
+      session &&
+      session.user &&
+      typeof session.user.email === 'string' &&
+      session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+    );
+  }
+
+  function revealAdminUI() {
+    const header = document.getElementById('adminHeader');
+    const main = document.getElementById('adminMainContainer') || document.querySelector('main.admin-container');
+    const footer = document.getElementById('adminFooter');
+    if (header) header.style.display = '';
+    if (main) main.style.display = '';
+    if (footer) footer.style.display = '';
   }
 
   // --- LOCAL STORAGE KEYS (Sadece İstatistik ve Mesajlar - Kategoriler ve Sorular 100% Supabase'de) ---
@@ -106,6 +146,13 @@
     supabaseSyncStatus: document.getElementById('supabaseSyncStatus'),
     supabaseStatusText: document.getElementById('supabaseStatusText'),
 
+    // Admin Credits Top-Up Card
+    adminAddCreditsForm: document.getElementById('adminAddCreditsForm'),
+    adminCreditEmailInput: document.getElementById('adminCreditEmailInput'),
+    adminCreditAmountInput: document.getElementById('adminCreditAmountInput'),
+    adminAddCreditsBtn: document.getElementById('adminAddCreditsBtn'),
+    adminCreditsResult: document.getElementById('adminCreditsResult'),
+
     // Toast Container
     toastContainer: document.getElementById('toastContainer')
   };
@@ -121,6 +168,41 @@
 
   // --- INITIALIZATION ---
   async function init() {
+    // 1. Strict Admin Session Verification (Hide UI & halt until verified)
+    const supabase = getAdminSupabaseClient();
+    if (!supabase) {
+      window.location.replace("index.html");
+      return;
+    }
+
+    try {
+      const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr || !isAuthorizedAdmin(session)) {
+        window.location.replace("index.html");
+        return;
+      }
+      // Sunucu doğrulamalı JWT kontrolü (getUser) — yerel sahte oturumları engeller
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user || typeof user.email !== 'string' || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        window.location.replace("index.html");
+        return;
+      }
+    } catch (authErr) {
+      console.warn("Admin oturum doğrulaması başarısız:", authErr);
+      window.location.replace("index.html");
+      return;
+    }
+
+    // 2. Real-time Auth State Change Guard (Redirect immediately on sign out)
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !isAuthorizedAdmin(session)) {
+        window.location.replace("index.html");
+      }
+    });
+
+    // 3. Verified Admin — Reveal Admin UI and load live data
+    revealAdminUI();
+
     try {
       loadStats();
       renderCategoriesGrid();
@@ -159,7 +241,6 @@
       }
     } catch (err) {
       console.error("admin.html başlatılırken yakalanan hata:", err);
-      // Hata olsa bile kesinlikle index.html'e yönlendirme yapma, panel yerinde kalsın
     }
   }
 
@@ -1124,17 +1205,31 @@
       el.resetFormBtn.addEventListener('click', resetQuestionForm);
     }
 
-    // Category Image File Select (Local Computer Upload -> Base64)
+    // Category Image File Select (Supabase Storage 'category-images' -> Public URL, Base64 fallback)
     if (el.categoryImageInput) {
       el.categoryImageInput.addEventListener('change', async (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         try {
-          const base64 = await readFileAsBase64(file, 400, 400);
-          currentCategoryBase64 = base64;
-          if (el.categoryImagePreviewImg) el.categoryImagePreviewImg.src = base64;
+          let imageUrl = '';
+          let uploadedToCloud = false;
+          if (window.SorBakalimData && typeof window.SorBakalimData.uploadImage === 'function') {
+            showToast("Kategori görseli yükleniyor...", "info");
+            const res = await window.SorBakalimData.uploadImage(file, 'categories', 400, 400);
+            imageUrl = res.url;
+            uploadedToCloud = Boolean(res.storage);
+          } else {
+            imageUrl = await readFileAsBase64(file, 400, 400);
+          }
+          currentCategoryBase64 = imageUrl;
+          if (el.categoryImagePreviewImg) el.categoryImagePreviewImg.src = imageUrl;
           if (el.categoryImagePreviewWrap) el.categoryImagePreviewWrap.style.display = 'flex';
-          showToast("Kategori görseli yüklendi.", "info");
+          showToast(
+            uploadedToCloud
+              ? "Kategori görseli Supabase Storage'a yüklendi! ☁️"
+              : "Kategori görseli yüklendi (Storage kovası hazır olduğunda buluta aktarılır).",
+            uploadedToCloud ? "success" : "info"
+          );
         } catch (err) {
           showToast(err.message || "Görsel yüklenemedi.", "error");
         }
@@ -1150,17 +1245,31 @@
       });
     }
 
-    // Question Image File Select (Local Computer Upload -> Base64)
+    // Question Image File Select (Supabase Storage 'category-images' -> Public URL, Base64 fallback)
     if (el.questionImageInput) {
       el.questionImageInput.addEventListener('change', async (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         try {
-          const base64 = await readFileAsBase64(file, 800, 800);
-          currentQuestionBase64 = base64;
-          if (el.imagePreviewImg) el.imagePreviewImg.src = base64;
+          let imageUrl = '';
+          let uploadedToCloud = false;
+          if (window.SorBakalimData && typeof window.SorBakalimData.uploadImage === 'function') {
+            showToast("Soru görseli yükleniyor...", "info");
+            const res = await window.SorBakalimData.uploadImage(file, 'questions', 800, 800);
+            imageUrl = res.url;
+            uploadedToCloud = Boolean(res.storage);
+          } else {
+            imageUrl = await readFileAsBase64(file, 800, 800);
+          }
+          currentQuestionBase64 = imageUrl;
+          if (el.imagePreviewImg) el.imagePreviewImg.src = imageUrl;
           if (el.imagePreviewWrap) el.imagePreviewWrap.style.display = 'flex';
-          showToast("Soru görseli yüklendi.", "info");
+          showToast(
+            uploadedToCloud
+              ? "Soru görseli Supabase Storage'a yüklendi! ☁️"
+              : "Soru görseli yüklendi (Storage kovası hazır olduğunda buluta aktarılır).",
+            uploadedToCloud ? "success" : "info"
+          );
         } catch (err) {
           showToast(err.message || "Görsel yüklenemedi.", "error");
         }
@@ -1198,6 +1307,89 @@
     // Image Preview Modal Close
     if (el.closeImageModalBtn) {
       el.closeImageModalBtn.addEventListener('click', () => closeModal(el.imageModal));
+    }
+
+    // Admin Credits Top-Up Form
+    if (el.adminAddCreditsForm) {
+      el.adminAddCreditsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const emailValue = (el.adminCreditEmailInput ? el.adminCreditEmailInput.value.trim() : '');
+        const amountValue = (el.adminCreditAmountInput ? el.adminCreditAmountInput.value : '');
+        const parsedAmount = parseInt(amountValue, 10);
+
+        if (!emailValue || !emailValue.includes('@')) {
+          showToast("Lütfen geçerli bir e-posta adresi girin.", "error");
+          if (el.adminCreditEmailInput) el.adminCreditEmailInput.focus();
+          return;
+        }
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+          showToast("Lütfen 1 veya daha büyük bir oyun adedi girin.", "error");
+          if (el.adminCreditAmountInput) el.adminCreditAmountInput.focus();
+          return;
+        }
+
+        const supabase = getAdminSupabaseClient();
+        if (!supabase) {
+          showToast("Supabase bağlantısı hazır değil.", "error");
+          return;
+        }
+
+        const btn = el.adminAddCreditsBtn;
+        const originalBtnText = btn ? btn.textContent : '➕ Oyun Hakkı Ekle';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Ekleniyor...";
+        }
+        if (el.adminCreditsResult) {
+          el.adminCreditsResult.style.display = 'none';
+        }
+
+        try {
+          const { data, error } = await supabase.rpc('admin_add_credits', {
+            target_email: emailValue,
+            amount: parsedAmount
+          });
+
+          if (error) {
+            const errMsg = `Hata: ${error.message || 'Oyun hakkı eklenemedi.'}`;
+            if (el.adminCreditsResult) {
+              el.adminCreditsResult.textContent = `⚠️ ${errMsg}`;
+              el.adminCreditsResult.style.background = '#FFEAE8';
+              el.adminCreditsResult.style.color = '#DC2626';
+              el.adminCreditsResult.style.border = '1.5px solid #DC2626';
+              el.adminCreditsResult.style.display = 'block';
+            }
+            showToast(errMsg, "error");
+            return;
+          }
+
+          const successMsg = `${emailValue} hesabına +${parsedAmount} oyun hakkı eklendi. Yeni bakiye: ${data}`;
+          if (el.adminCreditsResult) {
+            el.adminCreditsResult.textContent = `✅ ${successMsg}`;
+            el.adminCreditsResult.style.background = '#D1FAE5';
+            el.adminCreditsResult.style.color = '#065F46';
+            el.adminCreditsResult.style.border = '1.5px solid #10B981';
+            el.adminCreditsResult.style.display = 'block';
+          }
+          showToast(`Oyun hakkı eklendi! Yeni bakiye: ${data}`, "success");
+        } catch (err) {
+          const errMsg = `İşlem hatası: ${err.message || err}`;
+          if (el.adminCreditsResult) {
+            el.adminCreditsResult.textContent = `⚠️ ${errMsg}`;
+            el.adminCreditsResult.style.background = '#FFEAE8';
+            el.adminCreditsResult.style.color = '#DC2626';
+            el.adminCreditsResult.style.border = '1.5px solid #DC2626';
+            el.adminCreditsResult.style.display = 'block';
+          }
+          showToast(errMsg, "error");
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalBtnText;
+          }
+        }
+      });
     }
 
     // Reset Data & Export Buttons

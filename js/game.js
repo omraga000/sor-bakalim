@@ -66,14 +66,68 @@ if (window.SorBakalimData && typeof window.SorBakalimData.loadGlobalCategories =
   }).catch(() => {});
 }
 
-/* ---------- oyun durumu ---------- */
+/* ---------- oyun durumu (Tek Aktif Maç Koruması) ---------- */
+if (!setup.matchId) {
+  setup.matchId = "match_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+  try { localStorage.setItem("setup", JSON.stringify(setup)); } catch (_) {}
+}
+const ACTIVE_MATCH_ID = setup.matchId;
+let matchSuperseded = false;
+
 const state = (() => {
   try {
     const g = JSON.parse(localStorage.getItem("game"));
-    if (g && Array.isArray(g.score) && g.used) return g;
+    if (
+      g &&
+      Array.isArray(g.score) &&
+      g.used &&
+      !g.finished &&
+      (!g.matchId || g.matchId === ACTIVE_MATCH_ID)
+    ) {
+      g.matchId = ACTIVE_MATCH_ID;
+      return g;
+    }
   } catch (e) {}
-  return { score: [0, 0], turn: 0, used: {}, msg: "" };
+  return { matchId: ACTIVE_MATCH_ID, score: [0, 0], turn: 0, used: {}, msg: "", finished: false };
 })();
+
+function clearActiveMatchSession() {
+  try {
+    localStorage.removeItem("game");
+    const curSetup = JSON.parse(localStorage.getItem("setup") || "null");
+    if (curSetup && curSetup.matchId === ACTIVE_MATCH_ID) {
+      delete curSetup.matchId;
+      delete curSetup.createdAt;
+      localStorage.setItem("setup", JSON.stringify(curSetup));
+    }
+  } catch (_) {}
+}
+
+// Başka bir sekmede yeni maç başlatılırsa bu eski sekmenin veriyi ezmesini engelle
+window.addEventListener("storage", (e) => {
+  if (e.key === "setup" && e.newValue) {
+    try {
+      const nextSetup = JSON.parse(e.newValue);
+      if (nextSetup && nextSetup.matchId && nextSetup.matchId !== ACTIVE_MATCH_ID) {
+        matchSuperseded = true;
+        if ($("modalCard") && $("questionModal")) {
+          $("modalCard").innerHTML = `
+            <h3>Yeni Maç Başlatıldı</h3>
+            <p style="margin: 12px 0 18px; color: var(--ink-muted, #574B45);">
+              Başka bir tarayıcı sekmesinde yeni bir oyun başlatıldı. Veri karışıklığını önlemek için bu eski sekme kilitlendi.
+            </p>
+            <div class="row-btns">
+              <button class="modal-close-btn" id="supersededHomeBtn">Ana Sayfa</button>
+              <button class="primary-btn" id="supersededReloadBtn">Yeni Maça Geç</button>
+            </div>`;
+          $("supersededHomeBtn").onclick = () => { location.href = "index.html"; };
+          $("supersededReloadBtn").onclick = () => { location.reload(); };
+          $("questionModal").style.display = "flex";
+        }
+      }
+    } catch (_) {}
+  }
+});
 
 /* ---------- Otomatik Oyun Kaydı (Oyunlarım Kütüphanesi) ---------- */
 function saveMatchSnapshot(forceCompleted = false) {
@@ -156,8 +210,10 @@ function saveMatchSnapshot(forceCompleted = false) {
 }
 
 const save = () => {
+  if (matchSuperseded) return;
+  state.matchId = ACTIVE_MATCH_ID;
   try { localStorage.setItem("game", JSON.stringify(state)); } catch (e) {}
-  saveMatchSnapshot();
+  saveMatchSnapshot(Boolean(state.finished));
 };
 const usedCount = () => CATS.reduce((n, c) => n + c.items.filter((_, i) => state.used[c.id + "-" + i]).length, 0);
 
@@ -183,7 +239,7 @@ function renderBoard() {
   $("boardGrid").innerHTML = CATS.map(c => `
     <div class="board-column">
       <div class="column-header">
-        ${c.img ? `<img src="${esc(c.img)}" alt="" class="cat-icon-img" style="width:24px;height:24px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:6px;">` : `<span class="cat-icon">${c.emoji || '🎯'}</span>`}
+        ${c.img ? `<img src="${esc(c.img)}" alt="" class="cat-icon-img" style="width:24px;height:24px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:6px;">` : `<span class="cat-icon">${esc(c.emoji || '🎯')}</span>`}
         <span class="cat-title">${esc(c.name || c.id)}</span>
       </div>
       <div class="tiles-container">
@@ -212,9 +268,11 @@ function adjust(team, delta) {               // + / - düğmeleri (elle düzeltm
 function closeModal() { $("questionModal").style.display = "none"; }
 
 function finishGame() {
+  state.finished = true;
   saveMatchSnapshot(true);
+  try { localStorage.setItem("game", JSON.stringify(state)); } catch (_) {}
   const [a, b] = state.score;
-  const result = a === b ? "Berabere!" : "Kazanan: " + NAMES[a > b ? 0 : 1] + "";
+  const result = a === b ? "Berabere!" : "Kazanan: " + esc(NAMES[a > b ? 0 : 1]);
   $("modalCard").innerHTML = `
     <h3>Oyun Sonucu</h3>
     <div class="final-scores">
@@ -227,7 +285,10 @@ function finishGame() {
       <button class="primary-btn" id="homeBtn">Ana Sayfa</button>
     </div>`;
   $("backBtn").onclick = closeModal;
-  $("homeBtn").onclick = () => { location.href = "index.html"; };
+  $("homeBtn").onclick = () => {
+    clearActiveMatchSession();
+    location.href = "index.html";
+  };
   $("questionModal").style.display = "flex";
 }
 

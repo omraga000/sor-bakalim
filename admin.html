@@ -6,12 +6,6 @@
   <title>Sor Bakalım - Yönetim Paneli</title>
   <link rel="icon" type="image/png" href="img/logo.png">
 
-  <!-- Anti-Redirect Guard: admin.html doğrudan açıldığında kesinlikle yerinde kalmasını sağlar, index.html yönlendirmesini engeller -->
-  <script>
-    window.__IS_ADMIN_PAGE__ = true;
-    window.__PREVENT_REDIRECT__ = true;
-  </script>
-
   <!-- Google Fonts: Outfit (Brand & Numbers) & Plus Jakarta Sans (Modern UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +21,7 @@
   <!-- ==========================================================================
        TOPBAR & BRANDING HEADER (Clickable link back to index.html)
        ========================================================================== -->
-  <header class="admin-header">
+  <header class="admin-header" id="adminHeader" style="display: none;">
     <div class="header-container">
       <!-- Clickable Home Link to index.html with Brand Mascot & Typography -->
       <a href="index.html" class="brand-link" title="Ana Sayfaya ve Oyuna Dön">
@@ -76,7 +70,7 @@
   <!-- ==========================================================================
        MAIN ADMIN DASHBOARD CONTAINER
        ========================================================================== -->
-  <main class="admin-container">
+  <main class="admin-container" id="adminMainContainer" style="display: none;">
 
     <!-- ==========================================================================
          TOP DASHBOARD / STATISTICS OVERVIEW (Cards Layout)
@@ -153,6 +147,40 @@
           </div>
         </div>
 
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         COMPACT ADMIN CREDITS CARD: OYUN HAKKI TANIMLA (ADMIN)
+         ========================================================================== -->
+    <section class="admin-credits-section" id="oyunHakkiBolumu" aria-label="Oyun Hakkı Tanımla" style="margin-bottom: 1.75rem;">
+      <div class="form-card" style="padding: 1.25rem 1.5rem;">
+        <div class="form-title-wrap" style="margin-bottom: 0.9rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <h3 class="form-title" style="margin: 0;">🎟️ Oyun Hakkı Tanımla (Admin)</h3>
+          <span style="font-size: 0.82rem; color: var(--text-dim);">Kendi hesabınıza veya herhangi bir oyuncunun e-postasına anında oyun hakkı ekleyin</span>
+        </div>
+        <form id="adminAddCreditsForm" novalidate autocomplete="off" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px;">
+          <div class="form-group" style="flex: 2 1 260px; margin-bottom: 0;">
+            <label class="form-label" for="adminCreditEmailInput">
+              <span>Kullanıcı E-posta</span>
+              <span class="req">*</span>
+            </label>
+            <input type="email" id="adminCreditEmailInput" class="form-input" value="sorbakalim.iletisim@outlook.com" placeholder="ornek@eposta.com" required>
+          </div>
+          <div class="form-group" style="flex: 0 1 130px; margin-bottom: 0;">
+            <label class="form-label" for="adminCreditAmountInput">
+              <span>Oyun Adedi</span>
+              <span class="req">*</span>
+            </label>
+            <input type="number" id="adminCreditAmountInput" class="form-input" value="5" min="1" max="1000" step="1" required>
+          </div>
+          <div style="flex: 0 0 auto;">
+            <button type="submit" id="adminAddCreditsBtn" class="btn btn-primary" style="height: 44px; white-space: nowrap;">
+              ➕ Oyun Hakkı Ekle
+            </button>
+          </div>
+        </form>
+        <div id="adminCreditsResult" role="status" aria-live="polite" style="display: none; margin-top: 0.85rem; padding: 0.65rem 0.9rem; border-radius: 10px; font-size: 0.9rem; font-weight: 700;"></div>
       </div>
     </section>
 
@@ -550,17 +578,17 @@
   <!-- ==========================================================================
        FOOTER
        ========================================================================== -->
-  <footer class="admin-footer">
+  <footer class="admin-footer" id="adminFooter" style="display: none;">
     <p>Sor Bakalım © İki Takımlı Bilgi Yarışması · <a href="index.html">Oyuna Dön</a></p>
   </footer>
+
+  <!-- Shared Auth Module (Loads first so admin guard uses active Supabase session) -->
+  <script src="js/auth.js"></script>
 
   <!-- Central Questions Database & Storage Engine -->
   <script src="js/questions.js"></script>
 
   <!-- Admin JavaScript Logic -->
   <script src="js/admin.js"></script>
-
-  <!-- Shared Auth Module -->
-  <script src="js/auth.js"></script>
 </body>
 </html>

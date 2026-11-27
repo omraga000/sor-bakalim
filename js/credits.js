@@ -141,10 +141,10 @@
   }
 
   /**
-   * Kullanıcı için public.user_game_credits satırının var olmasını garanti eder.
-   * Satır yoksa { user_id, email, games_remaining: 1, total_purchased: 0 } ekler.
+   * Giriş yapmış kullanıcının public.user_game_credits satırını YALNIZCA okur (SELECT).
+   * İstemci tarafından doğrudan INSERT/UPDATE/DELETE kesinlikle yapılmaz (RLS uyumlu).
    */
-  async function ensureUserCreditsRow(userId, email) {
+  async function readUserCreditsRow(userId) {
     const client = getClient();
     if (!client || !userId) {
       return { success: false, error: "Kullanıcı bilgisi veya Supabase istemcisi eksik." };
@@ -153,7 +153,7 @@
     try {
       const { data: existing, error: readErr } = await client
         .from(CREDITS_TABLE)
-        .select("user_id, email, games_remaining, total_purchased")
+        .select("user_id, games_remaining, total_purchased")
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -161,55 +161,22 @@
         return { success: false, error: readErr.message };
       }
 
-      if (existing) {
+      if (!existing) {
         return {
           success: true,
-          created: false,
-          row: existing,
-          gamesRemaining: Number(existing.games_remaining) || 0,
-          totalPurchased: Number(existing.total_purchased) || 0
+          found: false,
+          row: null,
+          gamesRemaining: 0,
+          totalPurchased: 0
         };
-      }
-
-      const payload = {
-        user_id: userId,
-        email: email || "",
-        games_remaining: 1,
-        total_purchased: 0
-      };
-
-      const { data: inserted, error: insertErr } = await client
-        .from(CREDITS_TABLE)
-        .insert(payload)
-        .select("user_id, email, games_remaining, total_purchased")
-        .single();
-
-      if (insertErr) {
-        // Eşzamanlı ekleme çakışması durumunda tekrar oku
-        const { data: retryRow } = await client
-          .from(CREDITS_TABLE)
-          .select("user_id, email, games_remaining, total_purchased")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (retryRow) {
-          return {
-            success: true,
-            created: false,
-            row: retryRow,
-            gamesRemaining: Number(retryRow.games_remaining) || 0,
-            totalPurchased: Number(retryRow.total_purchased) || 0
-          };
-        }
-        return { success: false, error: insertErr.message };
       }
 
       return {
         success: true,
-        created: true,
-        row: inserted,
-        gamesRemaining: inserted ? Number(inserted.games_remaining) : 1,
-        totalPurchased: inserted ? Number(inserted.total_purchased) : 0
+        found: true,
+        row: existing,
+        gamesRemaining: Number(existing.games_remaining) || 0,
+        totalPurchased: Number(existing.total_purchased) || 0
       };
     } catch (err) {
       return { success: false, error: err.message || String(err) };
@@ -242,9 +209,15 @@
         return { success: true, loggedIn: false, gamesRemaining: null };
       }
 
-      const res = await ensureUserCreditsRow(user.id, user.email || "");
+      let res = await readUserCreditsRow(user.id);
+      // Yeni kayıt sonrası DB trigger henüz satırı oluşturuyorsa 1 kez kısa gecikmeyle tekrar oku
+      if (res.success && !res.found) {
+        await new Promise(r => setTimeout(r, 500));
+        res = await readUserCreditsRow(user.id);
+      }
+
       if (!res.success) {
-        console.warn("user_game_credits okuma/oluşturma hatası:", res.error);
+        console.warn("user_game_credits okuma hatası:", res.error);
         _isLoading = false;
         updateCreditBadges();
         return { success: false, loggedIn: true, gamesRemaining: _gamesRemaining, error: res.error };
@@ -263,63 +236,19 @@
     }
   }
 
-  async function addCredits(amount) {
-    const gamesToAdd = parseInt(amount, 10);
-    if (!gamesToAdd || gamesToAdd <= 0) {
-      return { success: false, error: "Geçersiz oyun paketi miktarı." };
-    }
-
-    const client = getClient();
-    if (!client) {
-      return { success: false, error: "Supabase bağlantısı kurulamadı." };
-    }
-
-    const { data: sessionData } = await client.auth.getSession();
-    const user = sessionData && sessionData.session ? sessionData.session.user : null;
-    _currentUser = user;
-
-    if (!user) {
-      return { success: false, needsAuth: true, error: "Paket satın almak için giriş yapmalısınız." };
-    }
-
-    try {
-      const ensured = await ensureUserCreditsRow(user.id, user.email || "");
-      if (!ensured.success) {
-        return { success: false, error: ensured.error };
-      }
-
-      const newRemaining = (Number(ensured.gamesRemaining) || 0) + gamesToAdd;
-      const newPurchased = (Number(ensured.totalPurchased) || 0) + gamesToAdd;
-
-      const { data: updated, error: updErr } = await client
-        .from(CREDITS_TABLE)
-        .update({
-          email: user.email || "",
-          games_remaining: newRemaining,
-          total_purchased: newPurchased
-        })
-        .eq("user_id", user.id)
-        .select("games_remaining, total_purchased")
-        .single();
-
-      if (updErr) {
-        return { success: false, error: updErr.message };
-      }
-
-      _gamesRemaining = updated ? Number(updated.games_remaining) : newRemaining;
-      _totalPurchased = updated ? Number(updated.total_purchased) : newPurchased;
-
-      updateCreditBadges();
-      return { success: true, gamesRemaining: _gamesRemaining, totalPurchased: _totalPurchased };
-    } catch (err) {
-      return { success: false, error: err.message || String(err) };
-    }
+  // Ücretsiz kredi ekleme devre dışı (Paddle ödeme entegrasyonu eklenene kadar)
+  async function addCredits() {
+    notifyToast("Ödeme sistemi yakında aktif olacak!", "info");
+    return { success: false, disabled: true, error: "Ödeme sistemi yakında aktif olacak!" };
   }
 
+  /**
+   * Güvenli Supabase RPC ile 1 oyun hakkı düşer: consume_game_credit()
+   */
   async function consumeGameCredit() {
     const client = getClient();
     if (!client) {
-      return { success: false, error: "Supabase bağlantısı kurulamadı." };
+      return { success: false, error: "Oyun hakkınız kalmadı." };
     }
 
     const { data: sessionData } = await client.auth.getSession();
@@ -327,47 +256,32 @@
     _currentUser = user;
 
     if (!user) {
-      return { success: false, needsAuth: true, error: "Oyuna başlamak için giriş yapmalısınız." };
+      return { success: false, needsAuth: true, error: "Oyun hakkınız kalmadı." };
     }
 
     try {
-      const ensured = await ensureUserCreditsRow(user.id, user.email || "");
-      if (!ensured.success) {
-        return { success: false, error: ensured.error };
-      }
+      const { data, error } = await client.rpc("consume_game_credit");
 
-      const currentCount = Number(ensured.gamesRemaining) || 0;
-
-      if (currentCount <= 0) {
-        _gamesRemaining = 0;
-        _totalPurchased = Number(ensured.totalPurchased) || 0;
-        updateCreditBadges();
+      if (error) {
+        console.warn("consume_game_credit RPC hatası:", error.message);
+        if (String(error.message || "").toUpperCase().includes("NO_CREDITS_REMAINING")) {
+          _gamesRemaining = 0;
+          updateCreditBadges();
+        }
         return {
           success: false,
           insufficient: true,
-          gamesRemaining: 0,
-          error: "Oyun krediniz bitti! Yeni oyun oynamak için paket satın almalısınız."
+          gamesRemaining: _gamesRemaining,
+          error: "Oyun hakkınız kalmadı."
         };
       }
 
-      const newCount = currentCount - 1;
-      const { data: updated, error: updErr } = await client
-        .from(CREDITS_TABLE)
-        .update({ games_remaining: newCount })
-        .eq("user_id", user.id)
-        .select("games_remaining, total_purchased")
-        .single();
-
-      if (updErr) {
-        return { success: false, error: updErr.message };
-      }
-
-      _gamesRemaining = updated ? Number(updated.games_remaining) : newCount;
-      _totalPurchased = updated ? Number(updated.total_purchased) : _totalPurchased;
+      _gamesRemaining = Number(data);
       updateCreditBadges();
       return { success: true, gamesRemaining: _gamesRemaining };
     } catch (err) {
-      return { success: false, error: err.message || String(err) };
+      console.warn("consumeGameCredit istisnası:", err);
+      return { success: false, insufficient: true, error: "Oyun hakkınız kalmadı." };
     }
   }
 
@@ -520,9 +434,9 @@
         <div class="modal-card credits-modal-card">
           <button type="button" class="credits-modal-close" id="closeNoCreditsBtn" aria-label="Kapat">✕</button>
           <div class="credits-modal-icon">🎟️</div>
-          <h3>Oyun Krediniz Bitti!</h3>
+          <h3>Oyun Hakkınız Kalmadı</h3>
           <p class="credits-modal-subtitle" style="font-weight:700; color:var(--ink-dark, #241C18);">
-            Oyun krediniz bitti! Yeni oyun oynamak için paket satın almalısınız.
+            Oyun hakkınız kalmadı.
           </p>
           <div class="credits-modal-actions">
             <button type="button" class="modal-close-btn" id="cancelNoCreditsBtn">Kapat</button>
@@ -563,39 +477,9 @@
     if (modal) modal.style.display = "flex";
   }
 
-  function openPurchaseModal(pkgId) {
-    const pkg = typeof pkgId === "object" ? pkgId : PACKAGES.find(p => p.id === pkgId || p.games === Number(pkgId));
-    if (!pkg) return;
-
+  function openPurchaseModal() {
     closeAllPackageDropdowns();
-
-    if (!_currentUser) {
-      openLoginPromptModal(`${pkg.title} paketini satın almak için lütfen önce giriş yapın.`);
-      return;
-    }
-
-    ensureModalsExist();
-    _selectedPackage = pkg;
-
-    const currentCount = typeof _gamesRemaining === "number" ? _gamesRemaining : 0;
-    const afterCount = currentCount + pkg.games;
-
-    const iconEl = document.getElementById("pkgModalIcon");
-    const titleEl = document.getElementById("pkgModalTitle");
-    const nameEl = document.getElementById("pkgSummaryName");
-    const detailEl = document.getElementById("pkgSummaryDetail");
-    const curEl = document.getElementById("pkgSummaryCurrent");
-    const afterEl = document.getElementById("pkgSummaryAfter");
-
-    if (iconEl) iconEl.textContent = pkg.icon;
-    if (titleEl) titleEl.textContent = `${pkg.title} Paketi`;
-    if (nameEl) nameEl.textContent = pkg.title;
-    if (detailEl) detailEl.textContent = pkg.subtitle;
-    if (curEl) curEl.textContent = `${currentCount} Oyun`;
-    if (afterEl) afterEl.textContent = `${afterCount} Oyun`;
-
-    const modal = document.getElementById("packageConfirmModal");
-    if (modal) modal.style.display = "flex";
+    notifyToast("Ödeme sistemi yakında aktif olacak!", "info");
   }
 
   function bindDropdownUI() {
@@ -677,7 +561,6 @@
 
   window.SorBakalimCredits = {
     PACKAGES: PACKAGES,
-    ensureUserCreditsRow: ensureUserCreditsRow,
     fetchCredits: fetchCredits,
     addCredits: addCredits,
     consumeGameCredit: consumeGameCredit,

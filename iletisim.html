@@ -212,7 +212,8 @@
     if (type === "error") icon = "❌";
     if (type === "success") icon = "✅";
 
-    toast.innerHTML = `<span style="font-size:1.15rem; flex-shrink:0;">${icon}</span><span>${message}</span>`;
+    const safeMsg = String(message || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    toast.innerHTML = `<span style="font-size:1.15rem; flex-shrink:0;">${icon}</span><span>${safeMsg}</span>`;
     container.appendChild(toast);
 
     setTimeout(() => {

@@ -115,9 +115,17 @@ function showWho() {
 }
 
 function finish(w) {
+  // Tek aktif maç koruması: başka sekmede yeni maç başladıysa eski soruyu yazma
+  const latestSetup = read("setup", {});
+  if (setup.matchId && latestSetup.matchId && latestSetup.matchId !== setup.matchId) {
+    location.replace("game.html");
+    return;
+  }
+
   if (w >= 0) game.score[w] += item.p;         // sadece bir takım puan alır
   game.used[key] = 1;
   game.turn = 1 - game.turn;                   // her sorudan sonra sıra değişir
+  game.matchId = setup.matchId || game.matchId;
   game.msg = w >= 0 ? NAMES[w] + " " + item.p + " puan kazandı!" : "Kimse bilemedi. Puan yok, sıra değişti.";
   try { localStorage.setItem("game", JSON.stringify(game)); } catch (e) {}
 

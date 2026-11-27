@@ -7,12 +7,17 @@
 
   const SUPABASE_URL = "https://fzxrqvobatablbtssggo.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_orCsNwYborsnhOhixAez_Q_H_Aw73tM";
+  const ADMIN_EMAIL = "sorbakalim.iletisim@outlook.com";
 
   let supabaseClient = null;
 
   // Initialize or get the Supabase Client safely
   function getClient() {
     if (supabaseClient) return supabaseClient;
+    if (window.supabaseClient) {
+      supabaseClient = window.supabaseClient;
+      return supabaseClient;
+    }
     if (window.supabase && typeof window.supabase.createClient === 'function') {
       try {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -22,6 +27,7 @@
             detectSessionInUrl: true
           }
         });
+        window.supabaseClient = supabaseClient;
       } catch (err) {
         console.error("Supabase istemcisi oluşturulurken hata:", err);
       }
@@ -123,6 +129,7 @@
         container.classList.add("is-logged-in");
         const fullName = (user.user_metadata && user.user_metadata.full_name) || user.email.split("@")[0];
         const email = user.email || "";
+        const isAdmin = Boolean(email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
         const initials = getInitials(fullName, email);
         const joinDate = formatTurkishDate(user.created_at);
         const uniqueId = `profileMenu_${index}_${Math.random().toString(36).substr(2, 4)}`;
@@ -138,7 +145,7 @@
                 <div class="dropdown-user-details">
                   <div class="dropdown-user-name" title="${escapeHtml(fullName)}">${escapeHtml(fullName)}</div>
                   <div class="dropdown-user-email" title="${escapeHtml(email)}">${escapeHtml(email)}</div>
-                  <span class="dropdown-status-badge">🎮 Oyuncu</span>
+                  <span class="dropdown-status-badge">${isAdmin ? "🛡️ Admin" : "🎮 Oyuncu"}</span>
                 </div>
               </div>
               <div class="dropdown-meta">
@@ -159,6 +166,12 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                   <span>İletişim &amp; Destek</span>
                 </a>
+                ${isAdmin ? `
+                <a href="admin.html" class="dropdown-item-link" title="Yönetim Panelini Aç">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  <span>Admin Paneli</span>
+                </a>
+                ` : ''}
                 <button type="button" class="dropdown-logout-btn" data-action="logout" title="Oturumu Güvenli Şekilde Sonlandır">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                   <span>Çıkış Yap</span>
@@ -258,11 +271,28 @@
         email: email,
         password: password,
         options: {
+          emailRedirectTo: window.location.origin + '/giris.html',
           data: {
             full_name: fullName
           }
         }
       });
+    },
+
+    resendConfirmationEmail: async function (email) {
+      const client = getClient();
+      if (!client) throw new Error("Supabase bağlantısı kurulamadı.");
+      return await client.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: window.location.origin + '/giris.html'
+        }
+      });
+    },
+
+    isEmailVerified: function (user) {
+      return Boolean(user && user.email_confirmed_at);
     },
 
     signIn: async function (email, password) {

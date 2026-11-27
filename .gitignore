@@ -1,1 +1,13 @@
-.idea/ 
+.idea/
+
+# Environment files & local test credentials (NEVER commit secrets)
+.env
+.env.*
+*.env
+tests/*.local.*
+tests/credentials.*
+tests/*.secret.*
+
+# Dependencies & logs
+node_modules/
+*.log

@@ -57,8 +57,14 @@
       <div class="banner-text-wrap">
         <h3 id="successBannerTitle">Hesabınız Başarıyla Oluşturuldu!</h3>
         <p id="successBannerText">Giriş yapılıyor, yarışma alanına yönlendiriliyorsunuz...</p>
-        <div id="emailConfirmAction" style="display: none; margin-top: 12px;">
-          <a href="giris.html" class="banner-action-btn" style="display: inline-block; text-decoration: none;">Giriş Sayfasına Git</a>
+        <div id="emailConfirmAction" style="display: none; margin-top: 14px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <a href="giris.html" class="banner-action-btn" style="display: inline-block; text-decoration: none;">Giriş Sayfasına Git</a>
+            <button type="button" id="resendSignupBtn" class="banner-action-btn" style="background: var(--bg-input, #FFF9F2); color: var(--ink-dark, #241C18); border: 2px solid var(--border-dark, #241C18); cursor: pointer;">
+              📧 Doğrulama E-postasını Tekrar Gönder
+            </button>
+          </div>
+          <p id="resendStatusText" style="display: none; margin-top: 8px; font-size: 0.85rem; font-weight: 600;"></p>
         </div>
       </div>
     </div>
@@ -180,7 +186,65 @@
   const successBannerTitle = $("successBannerTitle");
   const successBannerText = $("successBannerText");
   const emailConfirmAction = $("emailConfirmAction");
+  const resendSignupBtn = $("resendSignupBtn");
+  const resendStatusText = $("resendStatusText");
   const errorBanner = $("errorBanner");
+  let lastRegisteredEmail = "";
+  let resendCooldownTimer = null;
+
+  function startResendCooldown(btn, seconds = 60) {
+    if (!btn) return;
+    let remaining = seconds;
+    btn.disabled = true;
+    btn.textContent = `⏳ Tekrar Gönder (${remaining}s)`;
+    if (resendCooldownTimer) clearInterval(resendCooldownTimer);
+    resendCooldownTimer = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(resendCooldownTimer);
+        resendCooldownTimer = null;
+        btn.disabled = false;
+        btn.textContent = "📧 Doğrulama E-postasını Tekrar Gönder";
+      } else {
+        btn.textContent = `⏳ Tekrar Gönder (${remaining}s)`;
+      }
+    }, 1000);
+  }
+
+  if (resendSignupBtn) {
+    resendSignupBtn.addEventListener("click", async () => {
+      if (!lastRegisteredEmail || !window.SorBakalimAuth) return;
+      resendSignupBtn.disabled = true;
+      resendSignupBtn.textContent = "Gönderiliyor...";
+      if (resendStatusText) resendStatusText.style.display = "none";
+      try {
+        const { error } = await window.SorBakalimAuth.resendConfirmationEmail(lastRegisteredEmail);
+        if (error) {
+          if (resendStatusText) {
+            resendStatusText.textContent = "⚠️ " + (error.message || "E-posta gönderilemedi. Lütfen biraz bekleyip tekrar deneyin.");
+            resendStatusText.style.color = "#DC2626";
+            resendStatusText.style.display = "block";
+          }
+          startResendCooldown(resendSignupBtn, 30);
+        } else {
+          if (resendStatusText) {
+            resendStatusText.textContent = `✅ Doğrulama e-postası ${lastRegisteredEmail} adresine tekrar gönderildi. Gelen kutunuzu ve spam klasörünü kontrol edin.`;
+            resendStatusText.style.color = "#065F46";
+            resendStatusText.style.display = "block";
+          }
+          startResendCooldown(resendSignupBtn, 60);
+        }
+      } catch (err) {
+        if (resendStatusText) {
+          resendStatusText.textContent = "⚠️ Bağlantı hatası. Lütfen tekrar deneyin.";
+          resendStatusText.style.color = "#DC2626";
+          resendStatusText.style.display = "block";
+        }
+        resendSignupBtn.disabled = false;
+        resendSignupBtn.textContent = "📧 Doğrulama E-postasını Tekrar Gönder";
+      }
+    });
+  }
   const errorBannerTitle = $("errorBannerTitle");
   const errorBannerText = $("errorBannerText");
 
@@ -371,21 +435,13 @@
 
       // Check registration result
       if (data && data.user) {
-        // Yeni hesap için public.user_game_credits tablosunda 1 ücretsiz oyun hakkı tanımla
-        if (window.SorBakalimCredits && typeof window.SorBakalimCredits.ensureUserCreditsRow === "function") {
-          try {
-            await window.SorBakalimCredits.ensureUserCreditsRow(data.user.id, data.user.email || emailVal);
-          } catch (creditErr) {
-            console.warn("Hoş geldin oyun kredisi kaydı uyarısı:", creditErr);
-          }
-        }
-
+        lastRegisteredEmail = emailVal;
         form.style.display = "none";
 
-        if (data.session) {
-          // Instantly logged in
+        if (data.session && data.user.email_confirmed_at) {
+          // Verified and logged in
           successBannerTitle.textContent = "Hesabınız Başarıyla Oluşturuldu!";
-          successBannerText.textContent = `Hoş geldiniz, ${fullNameVal}! 1 ücretsiz oyun hakkınız tanımlandı, ana sayfaya yönlendiriliyorsunuz...`;
+          successBannerText.textContent = `Hoş geldiniz, ${fullNameVal}! Oturumunuz açıldı, ana sayfaya yönlendiriliyorsunuz...`;
           successBanner.style.display = "flex";
           successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -393,12 +449,13 @@
             window.location.href = "index.html";
           }, 1400);
         } else {
-          // Email confirmation is required
-          successBannerTitle.textContent = "Hesabınız Oluşturuldu!";
-          successBannerText.textContent = `Sayın ${fullNameVal}, kaydınız alındı ve 1 ücretsiz oyun hakkınız hazırlandı. Lütfen ${emailVal} adresine gönderilen doğrulama e-postasını onaylayıp giriş yapınız.`;
+          // Email confirmation is required — do NOT treat as logged in
+          successBannerTitle.textContent = "Doğrulama E-postası Gönderildi!";
+          successBannerText.textContent = "Kayıt başarılı! Lütfen e-posta adresinize gönderilen doğrulama bağlantısına tıklayın ve ardından giriş yapın.";
           emailConfirmAction.style.display = "block";
           successBanner.style.display = "flex";
           successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
+          startResendCooldown(resendSignupBtn, 30);
         }
       }
     } catch (err) {

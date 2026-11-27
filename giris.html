@@ -72,6 +72,12 @@
       <div class="banner-text-wrap">
         <h4 id="errorBannerTitle">Giriş Yapılamadı</h4>
         <p id="errorBannerText">Lütfen bilgilerinizi kontrol ediniz.</p>
+        <div id="unverifiedEmailAction" style="display: none; margin-top: 10px;">
+          <button type="button" id="resendLoginBtn" class="banner-action-btn" style="background: #FFFFFF; color: var(--ink-dark, #241C18); border: 2px solid var(--border-dark, #241C18); cursor: pointer;">
+            📧 Doğrulama E-postasını Tekrar Gönder
+          </button>
+          <p id="loginResendStatus" style="display: none; margin-top: 8px; font-size: 0.85rem; font-weight: 600;"></p>
+        </div>
       </div>
     </div>
 
@@ -194,9 +200,76 @@
     });
   });
 
-  function showErrorBanner(title, text) {
+  const unverifiedEmailAction = $("unverifiedEmailAction");
+  const resendLoginBtn = $("resendLoginBtn");
+  const loginResendStatus = $("loginResendStatus");
+  let lastUnverifiedEmail = "";
+  let loginResendTimer = null;
+
+  function startLoginResendCooldown(btn, seconds = 60) {
+    if (!btn) return;
+    let remaining = seconds;
+    btn.disabled = true;
+    btn.textContent = `⏳ Tekrar Gönder (${remaining}s)`;
+    if (loginResendTimer) clearInterval(loginResendTimer);
+    loginResendTimer = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(loginResendTimer);
+        loginResendTimer = null;
+        btn.disabled = false;
+        btn.textContent = "📧 Doğrulama E-postasını Tekrar Gönder";
+      } else {
+        btn.textContent = `⏳ Tekrar Gönder (${remaining}s)`;
+      }
+    }, 1000);
+  }
+
+  if (resendLoginBtn) {
+    resendLoginBtn.addEventListener("click", async () => {
+      const targetEmail = lastUnverifiedEmail || (emailInput ? emailInput.value.trim() : "");
+      if (!targetEmail || !window.SorBakalimAuth) return;
+      resendLoginBtn.disabled = true;
+      resendLoginBtn.textContent = "Gönderiliyor...";
+      if (loginResendStatus) loginResendStatus.style.display = "none";
+      try {
+        const { error } = await window.SorBakalimAuth.resendConfirmationEmail(targetEmail);
+        if (error) {
+          if (loginResendStatus) {
+            loginResendStatus.textContent = "⚠️ " + (error.message || "Doğrulama e-postası gönderilemedi.");
+            loginResendStatus.style.color = "#DC2626";
+            loginResendStatus.style.display = "block";
+          }
+          startLoginResendCooldown(resendLoginBtn, 30);
+        } else {
+          if (loginResendStatus) {
+            loginResendStatus.textContent = `✅ Doğrulama e-postası ${targetEmail} adresine tekrar gönderildi. Gelen kutunuzu ve spam klasörünü kontrol edin.`;
+            loginResendStatus.style.color = "#065F46";
+            loginResendStatus.style.display = "block";
+          }
+          startLoginResendCooldown(resendLoginBtn, 60);
+        }
+      } catch (_) {
+        if (loginResendStatus) {
+          loginResendStatus.textContent = "⚠️ Bağlantı hatası. Lütfen tekrar deneyin.";
+          loginResendStatus.style.color = "#DC2626";
+          loginResendStatus.style.display = "block";
+        }
+        resendLoginBtn.disabled = false;
+        resendLoginBtn.textContent = "📧 Doğrulama E-postasını Tekrar Gönder";
+      }
+    });
+  }
+
+  function showErrorBanner(title, text, showResend = false) {
     errorBannerTitle.textContent = title;
     errorBannerText.textContent = text;
+    if (unverifiedEmailAction) {
+      unverifiedEmailAction.style.display = showResend ? "block" : "none";
+    }
+    if (loginResendStatus && !showResend) {
+      loginResendStatus.style.display = "none";
+    }
     errorBanner.style.display = "flex";
     errorBanner.classList.remove("shake");
     void errorBanner.offsetWidth; // retrigger shake
@@ -205,6 +278,7 @@
 
   function hideErrorBanner() {
     errorBanner.style.display = "none";
+    if (unverifiedEmailAction) unverifiedEmailAction.style.display = "none";
   }
 
   function setLoading(isLoading) {
@@ -286,19 +360,34 @@
 
       if (error) {
         let msg = "E-posta veya şifre hatalı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.";
-        if (error.message && error.message.includes("Email not confirmed")) {
-          msg = "E-posta adresiniz henüz onaylanmamış. Lütfen gelen kutunuzdaki onay bağlantısına tıklayarak hesabınızı aktif ediniz.";
-        } else if (error.message && error.message.includes("Invalid login credentials")) {
+        let isUnconfirmed = false;
+        const errText = String(error.message || "").toLowerCase();
+        if (errText.includes("email not confirmed")) {
+          isUnconfirmed = true;
+          lastUnverifiedEmail = emailVal;
+          msg = "E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzu (ve spam klasörünü) kontrol edin.";
+        } else if (errText.includes("invalid login credentials")) {
           msg = "E-posta veya şifre hatalı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.";
-        } else if (error.message && error.message.includes("rate limit")) {
+        } else if (errText.includes("rate limit")) {
           msg = "Çok fazla başarısız deneme yapıldı. Lütfen biraz bekleyip tekrar deneyiniz.";
         }
-        showErrorBanner("Giriş Başarısız", msg);
-        passwordInput.classList.add("field-error");
+        showErrorBanner(isUnconfirmed ? "E-posta Doğrulaması Gerekli" : "Giriş Başarısız", msg, isUnconfirmed);
+        if (!isUnconfirmed) passwordInput.classList.add("field-error");
         return;
       }
 
       if (data && data.session) {
+        if (data.user && !data.user.email_confirmed_at) {
+          lastUnverifiedEmail = emailVal;
+          await window.SorBakalimAuth.signOut();
+          showErrorBanner(
+            "E-posta Doğrulaması Gerekli",
+            "E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzu (ve spam klasörünü) kontrol edin.",
+            true
+          );
+          return;
+        }
+
         form.style.display = "none";
         successBanner.style.display = "flex";
         successBanner.scrollIntoView({ behavior: "smooth", block: "center" });
