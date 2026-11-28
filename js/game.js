@@ -264,6 +264,19 @@ function saveMatchSnapshot(forceCompleted = false) {
     if (savedGames.length > 50) savedGames = savedGames.slice(0, 50);
 
     localStorage.setItem("sorBakalimSavedGames", JSON.stringify(savedGames));
+
+    // Gerçek oyun oturumunu Supabase game_sessions tablosuna kaydet
+    if (window.SorBakalimAnalytics && typeof window.SorBakalimAnalytics.logGameSession === "function") {
+      window.SorBakalimAnalytics.logGameSession({
+        matchId: snapshot.id,
+        gameName: snapshot.gameName,
+        team1: snapshot.team1,
+        team2: snapshot.team2,
+        categories: CATS.map(c => c.name || c.id),
+        status: snapshot.status,
+        createdAt: snapshot.createdAt
+      });
+    }
   } catch (err) {
     console.warn("Oyun oturumu kütüphaneye kaydedilemedi:", err);
   }

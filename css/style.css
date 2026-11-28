@@ -16,71 +16,72 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* --- Brand CSS Variables --- */
+/* --- Brand CSS Variables (Logo-Derived All-Orange Brand System) --- */
 :root {
-  /* Canvas & Card Surfaces (Warm Sand, Peach-Cream & Apricot) */
-  --bg-main: #F5E6D0;
-  --bg-surface: #FFF0DE;
-  --bg-card: #FFF0DE;
-  --bg-card-hover: #FFF5EA;
-  --bg-elevated: #FFF0DE;
-  --bg-secondary: #FDE6C4;
-  --bg-input: #FFF9F2;
-  --bg-subtle: #EDD9C0;
-  --brand-cream: #F5E6D0;
+  /* Canvas & Card Surfaces (Sampled from img/logo.png: #FCECD4 / #FCF0D8 / #FCF4DC) */
+  --bg-main: #FCECD4;
+  --bg-surface: #FFF5E6;
+  --bg-card: #FFF5E6;
+  --bg-card-hover: #FFEBD0;
+  --bg-elevated: #FFF5E6;
+  --bg-secondary: #FAD9B0;
+  --bg-input: #FFFBF4;
+  --bg-subtle: #F2CFA0;
+  --brand-cream: #FCECD4;
 
-  /* Ink & Outlines */
-  --ink-dark: #241C18;
-  --ink-muted: #574B45;
-  --ink-dim: #7A6D67;
-  --border-dark: #241C18;
-  --border-subtle: #DFCCA8;
-  --text-main: #241C18;
-  --text-muted: #574B45;
-  --text-dim: #7A6D67;
+  /* Ink & Outlines (High-Contrast Espresso Charcoal) */
+  --ink-dark: #24160E;
+  --ink-muted: #5C3D2B;
+  --ink-dim: #7C553E;
+  --border-dark: #2A180E;
+  --border-subtle: #E6BF91;
+  --text-main: #24160E;
+  --text-muted: #5C3D2B;
+  --text-dim: #7C553E;
 
-  /* High-Energy Brand Accents */
-  --brand-orange: #F97316;
-  --brand-orange-hover: #EA580C;
-  --brand-orange-deep: #C2410C;
-  --brand-orange-gradient: linear-gradient(135deg, #FB923C 0%, #F97316 100%);
+  /* Logo-Centered Orange Brand Accents (#F06020, #EC5C20, #FCA434) */
+  --brand-orange: #F06020;
+  --brand-orange-vivid: #EC5C20;
+  --brand-orange-hover: #C84310;
+  --brand-orange-deep: #9A2E08;
+  --brand-orange-gradient: linear-gradient(135deg, #F06020 0%, #C84310 100%);
 
-  --brand-yellow: #FACC15;
-  --brand-yellow-hover: #EAB308;
-  --brand-yellow-light: #FEF08A;
-  --brand-gold: #D97706;
+  --brand-yellow: #FCA434;
+  --brand-yellow-hover: #E88B1C;
+  --brand-yellow-light: #FFE8BF;
+  --brand-gold: #C84310;
 
-  /* Team & Action Colors */
-  --t1-primary: #2563EB;
-  --t1-secondary: #3B82F6;
-  --t1-dark: #1D4ED8;
-  --t1-gradient: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
-  --t1-bg: #E8F1FF;
-  --t1-bg-hover: #D8E7FF;
+  /* Harmonized Team & Semantic Colors (Orange-Centered) */
+  --t1-primary: #C84310;
+  --t1-secondary: #F06020;
+  --t1-dark: #9A2E08;
+  --t1-gradient: linear-gradient(135deg, #F06020 0%, #C84310 100%);
+  --t1-bg: #FFE8CC;
+  --t1-bg-hover: #FFD8AA;
 
-  --t2-primary: #EF4444;
-  --t2-secondary: #F87171;
-  --t2-dark: #DC2626;
-  --t2-gradient: linear-gradient(135deg, #F87171 0%, #DC2626 100%);
-  --t2-bg: #FFEAE8;
-  --t2-bg-hover: #FFD9D6;
+  --t2-primary: #B42318;
+  --t2-secondary: #D9481E;
+  --t2-dark: #8A1B12;
+  --t2-gradient: linear-gradient(135deg, #D9481E 0%, #9E1F14 100%);
+  --t2-bg: #FDE2D8;
+  --t2-bg-hover: #FAD0C0;
 
-  --green-primary: #10B981;
-  --green-gradient: linear-gradient(135deg, #34D399 0%, #059669 100%);
+  --green-primary: #047857;
+  --green-gradient: linear-gradient(135deg, #10B981 0%, #047857 100%);
 
-  /* Pop Highlights */
-  --pop-purple: #8B5CF6;
-  --pop-purple-light: #EDE9FE;
-  --pop-teal: #14B8A6;
-  --pop-teal-light: #CCFBF1;
+  /* Warm Orange-Tinted Pop Highlights */
+  --pop-purple: #C84310;
+  --pop-purple-light: #FFE8CC;
+  --pop-teal: #B45309;
+  --pop-teal-light: #FEF3C7;
 
   /* Solid Tactile Offset Shadows */
-  --shadow-sm: 0 2px 0 #241C18;
-  --shadow-button: 0 4px 0 #241C18;
-  --shadow-button-hover: 0 6px 0 #241C18;
-  --shadow-card: 0 5px 0 #241C18;
-  --shadow-card-hover: 0 8px 0 #241C18;
-  --shadow-box: 0 6px 0 #241C18;
+  --shadow-sm: 0 2px 0 #2A180E;
+  --shadow-button: 0 4px 0 #2A180E;
+  --shadow-button-hover: 0 6px 0 #2A180E;
+  --shadow-card: 0 5px 0 #2A180E;
+  --shadow-card-hover: 0 8px 0 #2A180E;
+  --shadow-box: 0 6px 0 #2A180E;
 
   /* Radii */
   --radius-sm: 8px;
@@ -5628,6 +5629,446 @@ textarea:focus-visible,
   .q-answer {
     font-size: clamp(2.25rem, 2.6vw, 3.25rem);
   }
+}
+
+/* ==========================================================================
+   ORANGE-CENTERED THEME HARMONY OVERRIDES (COLOR-ONLY — ZERO LAYOUT CHANGES)
+   ========================================================================== */
+.hero-btn,
+.final-start-btn,
+.primary-btn,
+.lg-submit,
+.buy-games-btn {
+  background: var(--brand-orange-gradient) !important;
+  color: #FFFFFF !important;
+  border-color: var(--border-dark) !important;
+}
+
+.hero-btn:hover,
+.final-start-btn:hover,
+.primary-btn:hover,
+.lg-submit:hover,
+.buy-games-btn:hover {
+  background: linear-gradient(135deg, #C84310 0%, #9A2E08 100%) !important;
+}
+
+.column-header {
+  background: linear-gradient(135deg, #F06020 0%, #C84310 100%) !important;
+  color: #FFFFFF !important;
+  border-color: var(--border-dark) !important;
+}
+
+.point-tile {
+  background: linear-gradient(180deg, #FFF5E6 0%, #FFE4BE 100%) !important;
+  color: var(--ink-dark) !important;
+  border-color: var(--border-dark) !important;
+}
+
+.point-tile:hover:not(.used) {
+  background: linear-gradient(135deg, #FCA434 0%, #F06020 100%) !important;
+  color: #FFFFFF !important;
+}
+
+.point-tile.used {
+  background: #EED4B4 !important;
+  color: #8C6A52 !important;
+}
+
+.pts-badge-200 {
+  background: #FEF0C7 !important;
+  color: #92400E !important;
+}
+
+.pts-badge-400 {
+  background: #FFE2BC !important;
+  color: #B83A0C !important;
+}
+
+.pts-badge-600 {
+  background: #FDD7CC !important;
+  color: #9A1C13 !important;
+}
+
+.q-pts {
+  background: var(--brand-orange-gradient) !important;
+  color: #FFFFFF !important;
+}
+
+.q-tag {
+  background: #FFE8BF !important;
+  color: var(--ink-dark) !important;
+  border-color: var(--border-dark) !important;
+}
+
+.q-blue {
+  background: linear-gradient(135deg, #F06020 0%, #C84310 100%) !important;
+  color: #FFFFFF !important;
+}
+
+.turn-badge {
+  background: #FFE8BF !important;
+  color: var(--ink-dark) !important;
+  border-color: var(--border-dark) !important;
+}
+
+.nav a.play.on,
+.nav a.on {
+  background: var(--brand-orange-gradient) !important;
+  color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   INDEX.HTML PER-SECTION BACKGROUND COLORS & POLISH (COLOR-ONLY GUARDRAIL)
+   ========================================================================== */
+
+/* 1. Top Header & Hero Area: Golden-cream to soft peach gradient + warm amber logo glow */
+.topbar {
+  background: linear-gradient(180deg, #FFFDF7 0%, #FFF8EB 100%) !important;
+  border-bottom-color: #2A180E !important;
+}
+
+/* Remove top gap between .topbar and curved hero banner on index.html */
+main#ana {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+main#ana .hero {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-top: 0 !important;
+  margin-bottom: 38px;
+  padding: 40px 24px 86px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(255, 251, 240, 0.34) 0%, rgba(254, 240, 199, 0.10) 36%, transparent 62%),
+    linear-gradient(135deg, #DC2626 0%, #EA580C 30%, #F97316 62%, #F59E0B 85%, #FBBF24 100%) !important;
+  border-radius: 0 0 50% 50% / 0 0 76px 76px;
+  border: none;
+  border-bottom: 3px solid #2A180E;
+  box-shadow: 0 12px 32px rgba(200, 67, 16, 0.24);
+  position: relative;
+  z-index: 1;
+  color: #FFFFFF;
+}
+
+main#ana .hero h1 {
+  color: #FFFFFF !important;
+  text-shadow: 0 3px 0 rgba(42, 24, 14, 0.45), 0 8px 20px rgba(42, 24, 14, 0.24);
+}
+
+main#ana .hero .hero-lead {
+  color: #FFFDF7 !important;
+  text-shadow: 0 2px 10px rgba(42, 24, 14, 0.34);
+}
+
+main#ana .hero .hero-steps {
+  background: #FFFBF4 !important;
+  color: #1E1B18 !important;
+  border-color: #2A180E !important;
+  box-shadow: 0 4px 0 #2A180E, 0 8px 18px rgba(42, 24, 14, 0.18) !important;
+}
+
+main#ana .hero .hero-steps strong {
+  color: #C84310 !important;
+}
+
+main#ana .hero-logo-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px;
+  background: radial-gradient(circle at center, rgba(255, 251, 240, 0.56) 0%, rgba(254, 240, 199, 0.22) 50%, transparent 74%);
+  border-radius: 50%;
+}
+
+main#ana .hero-card {
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  main#ana .hero {
+    border-radius: 0 0 50% 50% / 0 0 48px 48px;
+    padding: 26px 16px 72px;
+    margin-bottom: 34px;
+  }
+}
+
+/* 2. "Oyun Oluştur" Card & Category Setup Section: Warm apricot-orange tint */
+main#ana .hero-card {
+  background: linear-gradient(180deg, #FFF7EC 0%, #FFF2E2 100%) !important;
+  border-color: #C84310 !important;
+  box-shadow: 0 6px 0 #2A180E, 0 14px 28px rgba(200, 67, 16, 0.12) !important;
+  color: #1E1B18 !important;
+}
+
+main#ana .hero-card h2,
+main#ana .hero-card p {
+  color: #1E1B18;
+}
+
+main#ana section.sec#oyun {
+  background: radial-gradient(circle at 85% 12%, rgba(252, 164, 52, 0.20) 0%, transparent 50%),
+              linear-gradient(180deg, #FFF2E2 0%, #FFE9CF 100%) !important;
+  border-radius: 28px;
+  border: 2px solid rgba(200, 67, 16, 0.28);
+  box-shadow: 0 10px 28px rgba(200, 67, 16, 0.09);
+  color: #1E1B18;
+}
+
+main#ana section.sec#oyun .sec-title,
+main#ana section.sec#oyun .sec-head p {
+  color: #1E1B18;
+}
+
+main#ana section.sec#oyun .startbar {
+  background: #FFFBF4 !important;
+  border-color: #C84310 !important;
+  color: #1E1B18 !important;
+}
+
+/* 3. Info / Rules Section: Distinct soft gold tint (#FFFBEB) */
+main#ana section.game-rules-section {
+  background: linear-gradient(180deg, #FFFBEB 0%, #FEF5D4 100%) !important;
+  border-radius: 28px;
+  border: 2px solid rgba(217, 119, 6, 0.25);
+  box-shadow: 0 10px 26px rgba(180, 83, 9, 0.07);
+  color: #1E1B18;
+}
+
+main#ana section.game-rules-section h2,
+main#ana section.game-rules-section .rules-subtitle {
+  color: #1E1B18;
+}
+
+main#ana section.game-rules-section .rule-card {
+  background: #FFFDF7 !important;
+  border-color: #2A180E !important;
+  box-shadow: 0 4px 0 #2A180E !important;
+  color: #1E1B18 !important;
+}
+
+main#ana section.game-rules-section .rule-card h3,
+main#ana section.game-rules-section .rule-card p {
+  color: #1E1B18;
+}
+
+/* 4. Team Setup Section: Warm alabaster surface (#FAF7F2) for clean separation */
+main#ana section.team-setup-section {
+  background: linear-gradient(180deg, #FAF7F2 0%, #F4EFE6 100%) !important;
+  border-radius: 28px;
+  border: 2px solid rgba(42, 24, 14, 0.16);
+  box-shadow: 0 12px 30px rgba(30, 27, 24, 0.07);
+  color: #1E1B18;
+}
+
+main#ana section.team-setup-section h2 {
+  color: #111827;
+}
+
+/* 5. Team 1 (Blue-Themed Cards): Soft light-blue tint (#EFF6FF) + subtle blue depth */
+#team1Box,
+#team1LifelinesBox,
+#resTeam1 {
+  background: linear-gradient(180deg, #EFF6FF 0%, #E0EEFF 100%) !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 5px 0 #1E3A8A, 0 10px 20px rgba(37, 99, 235, 0.12) !important;
+  color: #111827 !important;
+}
+
+#team1Box h3,
+#team1LifelinesBox h3,
+#resTeam1 strong,
+#resTeam1 li {
+  color: #111827 !important;
+}
+
+#team1LifelinesBox .lifeline-btn.sel {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #1E3A8A !important;
+}
+
+/* 6. Team 2 (Red-Themed Cards): Soft warm coral/rose tint (#FEF2F2) + subtle coral-red depth */
+#team2Box,
+#team2LifelinesBox,
+#resTeam2 {
+  background: linear-gradient(180deg, #FEF2F2 0%, #FDE2E2 100%) !important;
+  border-color: #DC2626 !important;
+  box-shadow: 0 5px 0 #7F1D1D, 0 10px 20px rgba(220, 38, 38, 0.12) !important;
+  color: #111827 !important;
+}
+
+#team2Box h3,
+#team2LifelinesBox h3,
+#resTeam2 strong,
+#resTeam2 li {
+  color: #111827 !important;
+}
+
+#team2LifelinesBox .lifeline-btn.sel {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #7F1D1D !important;
+}
+
+/* 7. Team Splitter & Additional Surface Polish */
+main#ana .dropdown-team-splitter .split-toggle-btn {
+  background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%) !important;
+  color: #1E1B18 !important;
+  border-color: #2A180E !important;
+}
+
+main#ana .dropdown-team-splitter .splitter-content {
+  background: #FFFDF7 !important;
+  border-color: #2A180E !important;
+  color: #1E1B18 !important;
+}
+
+/* ==========================================================================
+   HARMONIZED NON-LANDING PAGES (giris, kayit, sifre-sifirla, iletisim, game, soru, oyunlarim)
+   Warm Coral-Orange (#EA580C/#F97316), Golden-Amber (#FBBF24/#F59E0B),
+   Soft Cream/Sand/Alabaster (#FFF9EE, #FAF5EC, #FFFDF9), Crisp Ink (#1E1B18)
+   ========================================================================== */
+
+/* --- Auth & Contact Pages (giris.html, kayit.html, sifre-sifirla.html, iletisim.html) --- */
+main.lg-wrap {
+  background: radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.16) 0%, transparent 55%),
+              linear-gradient(180deg, #FFF9EE 0%, #FAF5EC 100%);
+}
+
+.lg-card,
+.lg-card.contact-card {
+  background: #FFFDF9 !important;
+  border: 2.5px solid #1E1B18 !important;
+  border-top: 6px solid #EA580C !important;
+  box-shadow: 0 6px 0 #1E1B18, 0 16px 32px rgba(234, 88, 12, 0.10) !important;
+  color: #1E1B18 !important;
+}
+
+.lg-card h1,
+.lg-card h2,
+.lg-card h3,
+.lg-card label {
+  color: #1E1B18 !important;
+}
+
+.lg-card .lg-sub {
+  color: #5C3D2B !important;
+}
+
+.contact-badge-pill {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FFEDD5 100%) !important;
+  color: #9A2E08 !important;
+  border: 1.5px solid #EA580C !important;
+}
+
+.lg-input {
+  background: #FFF9EE !important;
+  border-color: #1E1B18 !important;
+  color: #1E1B18 !important;
+}
+
+.lg-input:focus {
+  background: #FFFDF9 !important;
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.22) !important;
+}
+
+.lg-submit {
+  background: linear-gradient(135deg, #EA580C 0%, #F97316 58%, #F59E0B 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #1E1B18 !important;
+  box-shadow: 0 4px 0 #1E1B18 !important;
+}
+
+.lg-submit:hover {
+  background: linear-gradient(135deg, #C2410C 0%, #EA580C 65%, #D97706 100%) !important;
+}
+
+/* --- Active Game Board & Question View (game.html & soru.html) --- */
+body.game-body {
+  background: linear-gradient(180deg, #FFF9EE 0%, #FAF5EC 100%) !important;
+  color: #1E1B18 !important;
+}
+
+body.game-body .game-topbar {
+  background: #FFFDF9 !important;
+  border-bottom: 2.5px solid #1E1B18 !important;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.08) !important;
+}
+
+body.game-body .game-room-title {
+  color: #1E1B18 !important;
+}
+
+body.game-body .column-header {
+  background: linear-gradient(135deg, #EA580C 0%, #F97316 70%, #F59E0B 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #1E1B18 !important;
+}
+
+body.game-body .point-tile {
+  background: linear-gradient(180deg, #FFFDF9 0%, #FFF2E0 100%) !important;
+  color: #1E1B18 !important;
+  border-color: #1E1B18 !important;
+  box-shadow: 0 4px 0 #1E1B18 !important;
+}
+
+body.game-body .point-tile:hover:not(.used) {
+  background: linear-gradient(135deg, #F97316 0%, #F59E0B 100%) !important;
+  color: #FFFFFF !important;
+}
+
+body.game-body .point-tile.used {
+  background: #EFE4D4 !important;
+  color: #8C6E58 !important;
+  border-color: #C9B59C !important;
+  box-shadow: none !important;
+}
+
+body.game-body .game-footer-bar {
+  background: #FFFDF9 !important;
+  border-top: 2.5px solid #1E1B18 !important;
+}
+
+/* T1 Blue & T2 Red Team Score Panels on game.html & soru.html */
+body.game-body .team-panel.team-one,
+.q-side .q-team:first-child {
+  background: linear-gradient(180deg, #EFF6FF 0%, #E0EEFF 100%) !important;
+  border-color: #2563EB !important;
+  color: #1E1B18 !important;
+}
+
+body.game-body .team-panel.team-two,
+.q-side .q-team:last-child {
+  background: linear-gradient(180deg, #FEF2F2 0%, #FDE2E2 100%) !important;
+  border-color: #DC2626 !important;
+  color: #1E1B18 !important;
+}
+
+body.game-body .modal-card,
+.q-frame {
+  background: #FFFDF9 !important;
+  border-color: #1E1B18 !important;
+  border-top: 5px solid #EA580C !important;
+  color: #1E1B18 !important;
+}
+
+/* --- Saved Games Library (oyunlarim.html) --- */
+.saved-game-card {
+  background: #FFFDF9 !important;
+  border-color: #1E1B18 !important;
+  border-top: 5px solid #F97316 !important;
+  color: #1E1B18 !important;
+}
+
+.saved-game-card .game-cat-tag {
+  background: #FFF3D6 !important;
+  color: #1E1B18 !important;
+  border-color: #1E1B18 !important;
 }
 
 @media (min-width: 2560px) and (min-height: 1300px) {

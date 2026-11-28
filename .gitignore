@@ -11,3 +11,7 @@ tests/*.secret.*
 # Dependencies & logs
 node_modules/
 *.log
+
+# Local agent skills (keep out of git history and production deploys)
+.agent/
+.agents/

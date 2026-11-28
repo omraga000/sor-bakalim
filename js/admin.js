@@ -52,16 +52,21 @@
     if (footer) footer.style.display = '';
   }
 
-  // --- LOCAL STORAGE KEYS (Sadece İstatistik ve Mesajlar - Kategoriler ve Sorular 100% Supabase'de) ---
+  // --- LOCAL STORAGE KEYS (Yalnızca Mesajlar - Kategoriler, Sorular ve İstatistikler Canlı) ---
   const STORAGE_KEYS = {
-    STATS: 'sorBakalimStats',
     MESSAGES: 'sorBakalimMessages'
   };
 
   // --- STATE ---
   let categories = [];
   let questions = [];
-  let stats = {};
+  let stats = {
+    loading: true,
+    visitors30d: 0,
+    visitorsGrowthText: '—',
+    gamesPlayed: 0,
+    categoryPlays: {}
+  };
   let editingQuestionId = null;
   let questionPendingDeleteId = null;
   let categoryPendingDeleteId = null;
@@ -72,6 +77,7 @@
   const el = {
     // Stats
     statVisitors: document.getElementById('statVisitors'),
+    statVisitorsGrowth: document.getElementById('statVisitorsGrowth'),
     statGamesPlayed: document.getElementById('statGamesPlayed'),
     statTotalCategories: document.getElementById('statTotalCategories'),
     statTotalQuestions: document.getElementById('statTotalQuestions'),
@@ -262,6 +268,8 @@
             renderQuestionsTable();
             updateSupabaseStatus("Çevrimdışı / Tablo Bekleniyor", "error");
           }
+          await loadStats();
+          renderStats();
         } catch (err) {
           console.warn("admin.html Supabase bağlantı uyarısı:", err);
           updateSupabaseStatus("Bağlantı Hatası", "error");
@@ -784,46 +792,64 @@
   }
 
   // ==========================================================================
-  // STATS ENGINE
+  // LIVE STATS ENGINE (100% Real Data — Zero Mock/Hardcoded Numbers)
   // ==========================================================================
 
-  function loadStats() {
+  async function loadStats() {
+    stats.loading = true;
+    renderStats();
+
     try {
-      const stored = localStorage.getItem(STORAGE_KEYS.STATS);
-      if (stored) {
-        stats = JSON.parse(stored);
+      if (window.SorBakalimAnalytics && typeof window.SorBakalimAnalytics.fetchAdminStats === 'function') {
+        const live = await window.SorBakalimAnalytics.fetchAdminStats(categories);
+        stats = {
+          loading: false,
+          visitors30d: live.visitors30d || 0,
+          visitorsGrowthText: live.visitorsGrowthText || '—',
+          visitorsGrowthClass: live.visitorsGrowthClass || '',
+          gamesPlayed: live.gamesPlayed || 0,
+          categoryPlays: live.categoryPlays || {}
+        };
       } else {
         stats = {
-          visitors: 14250,
-          gamesPlayed: 1840,
-          categoryPlays: {
-            "Tarih": 415,
-            "Türk Futbolu": 482,
-            "Genel Kültür": 378,
-            "Yemek": 294,
-            "Coğrafya": 235,
-            "Dizi ve Film": 196
-          }
+          loading: false,
+          visitors30d: 0,
+          visitorsGrowthText: '—',
+          visitorsGrowthClass: '',
+          gamesPlayed: 0,
+          categoryPlays: {}
         };
       }
     } catch (e) {
-      stats = { visitors: 14250, gamesPlayed: 1840, categoryPlays: {} };
+      console.warn("Canlı istatistikler yüklenemedi:", e);
+      stats = {
+        loading: false,
+        visitors30d: 0,
+        visitorsGrowthText: '—',
+        visitorsGrowthClass: '',
+        gamesPlayed: 0,
+        categoryPlays: {}
+      };
     }
-
-    // Increment visitors per visit
-    stats.visitors = (stats.visitors || 14250) + (Math.floor(Math.random() * 3) + 1);
-    try {
-      localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
-    } catch (e) {}
   }
 
   function renderStats() {
     if (el.statVisitors) {
-      el.statVisitors.textContent = (stats.visitors || 14250).toLocaleString('tr-TR');
+      el.statVisitors.textContent = stats.loading
+        ? '—'
+        : Number(stats.visitors30d || 0).toLocaleString('tr-TR');
+    }
+
+    if (el.statVisitorsGrowth) {
+      el.statVisitorsGrowth.textContent = stats.loading
+        ? '—'
+        : (stats.visitorsGrowthText || '—');
     }
 
     if (el.statGamesPlayed) {
-      el.statGamesPlayed.textContent = (stats.gamesPlayed || 1840).toLocaleString('tr-TR');
+      el.statGamesPlayed.textContent = stats.loading
+        ? '—'
+        : Number(stats.gamesPlayed || 0).toLocaleString('tr-TR');
     }
 
     if (el.statTotalCategories) {
@@ -834,9 +860,26 @@
       el.statTotalQuestions.textContent = questions.length;
     }
 
-    // Render category leaderboard
+    // Render live category leaderboard
     if (el.categoriesRankingGrid) {
-      const playEntries = Object.entries(stats.categoryPlays || {})
+      if (stats.loading) {
+        el.categoriesRankingGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; color: var(--text-dim); padding: 1rem;">
+            Canlı istatistikler yükleniyor...
+          </div>
+        `;
+        return;
+      }
+
+      const countsMap = { ...(stats.categoryPlays || {}) };
+      // Aktif kategorileri 0 oyun ile dahil et (hiç oynanmadıysa temiz 0 oyun göster)
+      categories.forEach(c => {
+        if (c && c.name && !(c.name in countsMap)) {
+          countsMap[c.name] = 0;
+        }
+      });
+
+      const playEntries = Object.entries(countsMap)
         .sort((a, b) => b[1] - a[1]);
 
       if (playEntries.length === 0) {
@@ -848,10 +891,10 @@
         return;
       }
 
-      const maxPlays = Math.max(...playEntries.map(e => e[1]), 1);
+      const maxPlays = Math.max(...playEntries.map(e => e[1]), 0);
 
       el.categoriesRankingGrid.innerHTML = playEntries.slice(0, 6).map(([catName, count], index) => {
-        const percentage = Math.round((count / maxPlays) * 100);
+        const percentage = maxPlays > 0 ? Math.round((count / maxPlays) * 100) : 0;
         let rankClass = "rank-other";
         if (index === 0) rankClass = "rank-1";
         else if (index === 1) rankClass = "rank-2";
@@ -865,9 +908,9 @@
             <div class="ranking-item-top">
               <div class="ranking-info">
                 <span class="ranking-badge ${rankClass}">#${index + 1}</span>
-                <span class="ranking-name">${emoji} ${escapeHtml(catName)}</span>
+                <span class="ranking-name">${escapeHtml(emoji)} ${escapeHtml(catName)}</span>
               </div>
-              <span class="ranking-count">${count.toLocaleString('tr-TR')} oyun</span>
+              <span class="ranking-count">${Number(count).toLocaleString('tr-TR')} oyun</span>
             </div>
             <div class="ranking-progress-track">
               <div class="ranking-progress-fill" style="width: ${percentage}%"></div>

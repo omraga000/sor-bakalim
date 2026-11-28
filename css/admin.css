@@ -16,58 +16,59 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Canvas & Card Surfaces (Warm Sand, Peach-Cream & Apricot) */
-  --bg-main: #F5E6D0;
-  --bg-card: #FFF0DE;
-  --bg-card-hover: #FFF5EA;
-  --bg-input: #FFF9F2;
-  --bg-secondary: #FDE6C4;
-  --border-color: #241C18;
-  --border-dark: #241C18;
-  --border-subtle: #DFCCA8;
-  --border-focus: #F97316;
+  /* Canvas & Card Surfaces (Logo-Derived #FCECD4 / #FFF5E6 / #FAD9B0) */
+  --bg-main: #FCECD4;
+  --bg-card: #FFF5E6;
+  --bg-card-hover: #FFEBD0;
+  --bg-input: #FFFBF4;
+  --bg-secondary: #FAD9B0;
+  --border-color: #2A180E;
+  --border-dark: #2A180E;
+  --border-subtle: #E6BF91;
+  --border-focus: #F06020;
 
-  /* Typography Colors */
-  --text-main: #241C18;
-  --text-muted: #574B45;
-  --text-dim: #7A6D67;
+  /* Typography Colors (High-Contrast Espresso) */
+  --text-main: #24160E;
+  --text-muted: #5C3D2B;
+  --text-dim: #7C553E;
 
-  /* High-Energy Accents */
-  --primary-orange: #F97316;
-  --primary-orange-hover: #EA580C;
-  --primary-orange-light: #FFEDD5;
-  --sunset-gradient: linear-gradient(135deg, #FB923C 0%, #F97316 100%);
+  /* Logo-Centered Orange Brand Accents (#F06020 / #C84310 / #FCA434) */
+  --primary-orange: #F06020;
+  --primary-orange-hover: #C84310;
+  --primary-orange-deep: #9A2E08;
+  --primary-orange-light: #FFE8CC;
+  --sunset-gradient: linear-gradient(135deg, #F06020 0%, #C84310 100%);
 
-  --accent-red: #EF4444;
-  --accent-red-hover: #DC2626;
-  --accent-red-light: #FFEAE8;
+  --accent-red: #B91C1C;
+  --accent-red-hover: #991B1B;
+  --accent-red-light: #FEE2E2;
 
-  --bright-yellow: #FACC15;
-  --bright-yellow-hover: #EAB308;
-  --bright-yellow-light: #FEF08A;
+  --bright-yellow: #FCA434;
+  --bright-yellow-hover: #E88B1C;
+  --bright-yellow-light: #FFE8BF;
 
-  --accent-blue: #2563EB;
-  --accent-blue-hover: #1D4ED8;
-  --accent-blue-light: #E8F1FF;
+  --accent-blue: #C84310;
+  --accent-blue-hover: #9A2E08;
+  --accent-blue-light: #FFE8CC;
 
-  --pop-purple: #8B5CF6;
-  --pop-purple-light: #EDE9FE;
-  --pop-teal: #14B8A6;
-  --pop-teal-light: #CCFBF1;
+  --pop-purple: #D9531E;
+  --pop-purple-light: #FFE4C4;
+  --pop-teal: #B45309;
+  --pop-teal-light: #FEF3C7;
 
-  /* Difficulty Levels */
-  --diff-200: #059669;
-  --diff-200-bg: #D1FAE5;
-  --diff-400: #D97706;
-  --diff-400-bg: #FEF3C7;
-  --diff-600: #DC2626;
-  --diff-600-bg: #FFEAE8;
+  /* Difficulty Levels (Orange-Spectrum Harmony) */
+  --diff-200: #92400E;
+  --diff-200-bg: #FEF0C7;
+  --diff-400: #B83A0C;
+  --diff-400-bg: #FFE2BC;
+  --diff-600: #9A1C13;
+  --diff-600-bg: #FDD7CC;
 
   /* Solid Tactile Offset Shadows */
-  --shadow-sm: 0 2px 0 #241C18;
-  --shadow-md: 0 4px 0 #241C18;
-  --shadow-lg: 0 6px 0 #241C18;
-  --shadow-card: 0 5px 0 #241C18;
+  --shadow-sm: 0 2px 0 #2A180E;
+  --shadow-md: 0 4px 0 #2A180E;
+  --shadow-lg: 0 6px 0 #2A180E;
+  --shadow-card: 0 5px 0 #2A180E;
 
   /* Layout Radius */
   --radius-sm: 8px;
@@ -2040,4 +2041,66 @@ textarea:focus-visible {
   html {
     font-size: 18px;
   }
+}
+
+/* ==========================================================================
+   HARMONIZED ADMIN PALETTE (MATCHES LANDING CORAL-ORANGE / AMBER / CREAM)
+   ========================================================================== */
+body {
+  background: linear-gradient(180deg, #FFF9EE 0%, #FAF5EC 100%) !important;
+  color: #1E1B18 !important;
+}
+
+.admin-header {
+  background: #FFFDF9 !important;
+  border-bottom: 3px solid #EA580C !important;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.08) !important;
+}
+
+.stat-card,
+.stat-card-wide,
+.form-card,
+.table-card,
+.cat-admin-card {
+  background: #FFFDF9 !important;
+  border-color: #1E1B18 !important;
+  color: #1E1B18 !important;
+}
+
+.form-card,
+.table-card {
+  border-top: 5px solid #EA580C !important;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  background: #FFF9EE !important;
+  border-color: #1E1B18 !important;
+  color: #1E1B18 !important;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  background: #FFFDF9 !important;
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.22) !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #EA580C 0%, #F97316 60%, #F59E0B 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #1E1B18 !important;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #C2410C 0%, #EA580C 70%, #D97706 100%) !important;
+}
+
+.table-count-badge,
+.cat-q-badge {
+  background: #FEF3C7 !important;
+  color: #1E1B18 !important;
+  border-color: #1E1B18 !important;
 }
