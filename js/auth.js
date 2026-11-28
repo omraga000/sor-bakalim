@@ -264,14 +264,15 @@
       }
     },
 
-    signUp: async function (email, password, fullName) {
+    signUp: async function (email, password, fullName, customRedirectUrl) {
       const client = getClient();
       if (!client) throw new Error("Supabase bağlantısı kurulamadı.");
+      const redirectUrl = customRedirectUrl || new URL('giris.html', window.location.href).href;
       return await client.auth.signUp({
         email: email,
         password: password,
         options: {
-          emailRedirectTo: window.location.origin + '/giris.html',
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName
           }
@@ -279,15 +280,33 @@
       });
     },
 
-    resendConfirmationEmail: async function (email) {
+    resendConfirmationEmail: async function (email, customRedirectUrl) {
       const client = getClient();
       if (!client) throw new Error("Supabase bağlantısı kurulamadı.");
+      const redirectUrl = customRedirectUrl || new URL('giris.html', window.location.href).href;
       return await client.auth.resend({
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: window.location.origin + '/giris.html'
+          emailRedirectTo: redirectUrl
         }
+      });
+    },
+
+    resetPasswordForEmail: async function (email, customRedirectUrl) {
+      const client = getClient();
+      if (!client) throw new Error("Supabase bağlantısı kurulamadı.");
+      const redirectTo = customRedirectUrl || new URL('sifre-sifirla.html', window.location.href).href;
+      return await client.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectTo
+      });
+    },
+
+    updatePassword: async function (newPassword) {
+      const client = getClient();
+      if (!client) throw new Error("Supabase bağlantısı kurulamadı.");
+      return await client.auth.updateUser({
+        password: newPassword
       });
     },
 

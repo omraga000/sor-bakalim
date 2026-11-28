@@ -1,3 +1,40 @@
+/* ---------- YENİLEME (REFRESH) & GEÇERSİZ GİRİŞ KORUMASI ---------- */
+(function enforceFreshGameEntry() {
+  let isReload = false;
+  try {
+    const navEntries = performance.getEntriesByType && performance.getEntriesByType("navigation");
+    if (navEntries && navEntries.length > 0 && navEntries[0].type === "reload") {
+      isReload = true;
+    } else if (performance.navigation && performance.navigation.type === 1) {
+      isReload = true;
+    }
+  } catch (_) {}
+
+  let validEntry = null;
+  try {
+    validEntry = sessionStorage.getItem("sorBakalimValidGameEntry");
+    sessionStorage.removeItem("sorBakalimValidGameEntry");
+  } catch (_) {}
+
+  let rawSetup = null;
+  try { rawSetup = JSON.parse(localStorage.getItem("setup") || "null"); } catch (_) {}
+  const hasValidSetup = Boolean(rawSetup && Array.isArray(rawSetup.cats) && rawSetup.cats.length >= 2);
+
+  if (isReload || !validEntry || !hasValidSetup) {
+    try {
+      localStorage.removeItem("game");
+      sessionStorage.removeItem("sorBakalimValidGameEntry");
+      if (rawSetup) {
+        delete rawSetup.matchId;
+        delete rawSetup.createdAt;
+        localStorage.setItem("setup", JSON.stringify(rawSetup));
+      }
+    } catch (_) {}
+    window.location.replace("index.html");
+    throw new Error("GAME_RELOAD_REDIRECT");
+  }
+})();
+
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -50,6 +87,9 @@ function updateGameCategories() {
   CATS = ids.map(id => ({ id, ...currentQ[id] }));
   TOTAL = CATS.reduce((n, c) => n + ((c && c.items) ? c.items.length : 0), 0);
   renderBoard();
+  if (TOTAL > 0 && usedCount() >= TOTAL && !state.finished) {
+    finishGame(true);
+  }
 }
 
 // Supabase Canlı Senkronizasyon Olayı (Buluttan yeni soru/kategori gelirse tahtayı güncelle)
@@ -194,8 +234,28 @@ function saveMatchSnapshot(forceCompleted = false) {
     } catch (_) {}
     if (!Array.isArray(savedGames)) savedGames = [];
 
-    const existingIdx = savedGames.findIndex(g => g.id === setup.matchId);
+    const catSig = (arr) => Array.isArray(arr) ? arr.slice().sort().join(",") : "";
+    const curCatSig = catSig(ids);
+
+    let existingIdx = savedGames.findIndex(g => g && g.id === setup.matchId);
+    if (existingIdx < 0) {
+      existingIdx = savedGames.findIndex(g =>
+        g &&
+        (g.userId || "guest") === userId &&
+        String(g.gameName || "").trim().toLowerCase() === String(snapshot.gameName || "").trim().toLowerCase() &&
+        String(g.team1 || "").trim().toLowerCase() === String(snapshot.team1 || "").trim().toLowerCase() &&
+        String(g.team2 || "").trim().toLowerCase() === String(snapshot.team2 || "").trim().toLowerCase() &&
+        catSig(g.cats) === curCatSig
+      );
+    }
+
     if (existingIdx >= 0) {
+      const prev = savedGames[existingIdx];
+      snapshot.id = prev.id;
+      snapshot.createdAt = prev.createdAt || snapshot.createdAt;
+      snapshot.dateFormatted = prev.dateFormatted || snapshot.dateFormatted;
+      snapshot.setup = { ...setup, matchId: prev.id, createdAt: snapshot.createdAt };
+      setup.matchId = prev.id;
       savedGames[existingIdx] = snapshot;
     } else {
       savedGames.unshift(snapshot);
@@ -267,29 +327,54 @@ function adjust(team, delta) {               // + / - düğmeleri (elle düzeltm
 
 function closeModal() { $("questionModal").style.display = "none"; }
 
-function finishGame() {
+function exitToHome() {
+  if (state.finished || (TOTAL > 0 && usedCount() >= TOTAL)) {
+    clearActiveMatchSession();
+  }
+  location.href = "index.html";
+}
+
+function finishGame(isAllDone = false) {
+  const allAnswered = Boolean(isAllDone) || (TOTAL > 0 && usedCount() >= TOTAL);
   state.finished = true;
   saveMatchSnapshot(true);
   try { localStorage.setItem("game", JSON.stringify(state)); } catch (_) {}
+
   const [a, b] = state.score;
-  const result = a === b ? "Berabere!" : "Kazanan: " + esc(NAMES[a > b ? 0 : 1]);
+  const isTie = a === b;
+  const trophy = isTie ? "🤝" : "🏆";
+  const result = isTie ? "Berabere!" : "Kazanan: " + esc(NAMES[a > b ? 0 : 1]);
+
   $("modalCard").innerHTML = `
-    <h3>Oyun Sonucu</h3>
+    <div style="font-size: 3rem; line-height: 1; margin-bottom: 8px;">${trophy}</div>
+    <h3>${allAnswered ? "Oyun Tamamlandı!" : "Oyun Sonucu"}</h3>
     <div class="final-scores">
       <div>${esc(NAMES[0])}<b>${a}</b></div>
       <div>${esc(NAMES[1])}<b>${b}</b></div>
     </div>
     <div class="reveal">${result}</div>
-    <div class="row-btns">
-      <button class="modal-close-btn" id="backBtn">Oyuna Dön</button>
-      <button class="primary-btn" id="homeBtn">Ana Sayfa</button>
+    <div class="row-btns" ${allAnswered ? 'style="grid-template-columns: 1fr;"' : ''}>
+      ${allAnswered ? '' : '<button class="modal-close-btn" id="backBtn">Oyuna Dön</button>'}
+      <button class="primary-btn" id="homeBtn">Ana Sayfaya Dön</button>
     </div>`;
-  $("backBtn").onclick = closeModal;
+
+  if ($("backBtn")) {
+    $("backBtn").onclick = () => {
+      state.finished = false;
+      save();
+      closeModal();
+    };
+  }
+
   $("homeBtn").onclick = () => {
     clearActiveMatchSession();
     location.href = "index.html";
   };
+
   $("questionModal").style.display = "flex";
+  setTimeout(() => {
+    if ($("homeBtn")) $("homeBtn").focus();
+  }, 50);
 }
 
 /* ---------- Başlangıç ---------- */
@@ -319,6 +404,6 @@ if (loader) {
 
 // Oyunu bitir parametresi veya tüm soruların bitmesi kontrolü
 const params = new URLSearchParams(location.search);
-if (params.get("finish") === "1" || (TOTAL > 0 && usedCount() === TOTAL)) {
-  finishGame();
+if (params.get("finish") === "1" || (TOTAL > 0 && usedCount() >= TOTAL)) {
+  finishGame(TOTAL > 0 && usedCount() >= TOTAL);
 }

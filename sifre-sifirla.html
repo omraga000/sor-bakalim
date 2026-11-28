@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Şifre Sıfırlama · Sor Bakalım</title>
+<link rel="icon" type="image/png" href="img/logo.png">
+<!-- Capture recovery URL hash/query BEFORE Supabase JS client strips or exchanges it -->
+<script>
+  window.__RECOVERY_INITIAL_URL__ = {
+    hash: window.location.hash || "",
+    search: window.location.search || ""
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light">
+
+<!-- ==========================================================================
+     TOPBAR & NAVBAR
+     ========================================================================== -->
+<header class="topbar">
+  <nav class="nav">
+    <a class="logo" href="index.html" title="Sor Bakalım Ana Sayfası">
+      <img src="img/logo.png" alt="Sor Bakalım" class="logo-img">
+      <span>Sor Bakalım</span>
+    </a>
+    <a class="play" href="index.html#oyun">Oyna</a>
+    <a class="link" href="oyunlarim.html">Oyunlarım</a>
+    <a class="link" href="iletisim.html">İletişim</a>
+    <div class="auth" id="navAuth">
+      <a href="giris.html">Giriş Yap</a>
+      <span class="sep"></span>
+      <a href="kayit.html">Hesap Oluştur</a>
+    </div>
+  </nav>
+</header>
+
+<!-- ==========================================================================
+     PASSWORD RESET CARD (STEP 1: REQUEST EMAIL / STEP 2: SET NEW PASSWORD)
+     ========================================================================== -->
+<main class="lg-wrap">
+  <section class="lg-card">
+
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div class="contact-badge-pill" id="resetBadge" style="background: #FEF3C7; color: var(--brand-orange-deep); margin-bottom: 12px;">
+        🔑 Hesap Kurtarma
+      </div>
+      <h1 id="resetHeading">Şifremi Unuttum</h1>
+      <p class="lg-sub" id="resetSubtext" style="margin-bottom: 0;">Kayıtlı e-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.</p>
+    </div>
+
+    <!-- Success Banner -->
+    <div class="contact-feedback-banner success-banner" id="successBanner" style="display: none;" role="status">
+      <div class="banner-icon-circle success-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h3 id="successBannerTitle">İşlem Başarılı!</h3>
+        <p id="successBannerText"></p>
+      </div>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div class="contact-feedback-banner error-banner shake" id="errorBanner" style="display: none;" role="alert">
+      <div class="banner-icon-circle error-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="banner-text-wrap">
+        <h4 id="errorBannerTitle">İşlem Tamamlanamadı</h4>
+        <p id="errorBannerText">Lütfen bilgilerinizi kontrol ediniz.</p>
+        <div id="expiredLinkAction" style="display: none; margin-top: 10px;">
+          <button type="button" id="requestNewLinkBtn" class="banner-action-btn" style="background: #FFFFFF; color: var(--ink-dark, #241C18); border: 2px solid var(--border-dark, #241C18); cursor: pointer;">
+            🔄 Yeni Sıfırlama Bağlantısı İste
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Request Password Reset Email -->
+    <form id="requestResetForm" novalidate>
+      <div class="lg-field">
+        <label for="resetEmail">
+          <span>E-posta Adresi</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <input class="lg-input" id="resetEmail" name="resetEmail" type="email" placeholder="ornek@alanadi.com" autocomplete="email" required>
+        <div class="input-error-msg" id="resetEmailError"></div>
+      </div>
+
+      <button class="lg-submit" id="sendResetBtn" type="submit">
+        <span class="btn-spinner-icon" id="sendSpinner" style="display: none;">
+          <svg class="spin-svg" viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.35)" stroke-width="3"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+        </span>
+        <span id="sendResetText">Sıfırlama Bağlantısı Gönder</span>
+      </button>
+
+      <p class="lg-alt">
+        Şifreni hatırladın mı? <a href="giris.html">Giriş Yap</a>
+      </p>
+    </form>
+
+    <!-- STEP 2: Set New Password (Shown directly when opened via Recovery Email Link) -->
+    <form id="updatePasswordForm" style="display: none;" novalidate>
+      <div class="lg-field">
+        <label for="newPassword">
+          <span>Yeni Şifre</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <div class="lg-pw">
+          <input class="lg-input" id="newPassword" name="newPassword" type="password" placeholder="En az 6 karakter" autocomplete="new-password" required>
+          <button type="button" class="lg-toggle" data-target="newPassword" title="Şifreyi Göster / Gizle">Göster</button>
+        </div>
+        <div class="input-error-msg" id="newPasswordError"></div>
+      </div>
+
+      <div class="lg-field">
+        <label for="newPasswordConfirm">
+          <span>Yeni Şifre (Tekrar)</span>
+          <span class="req-star" title="Zorunlu alan">*</span>
+        </label>
+        <div class="lg-pw">
+          <input class="lg-input" id="newPasswordConfirm" name="newPasswordConfirm" type="password" placeholder="Yeni şifrenizi tekrar girin" autocomplete="new-password" required>
+          <button type="button" class="lg-toggle" data-target="newPasswordConfirm" title="Şifreyi Göster / Gizle">Göster</button>
+        </div>
+        <div class="input-error-msg" id="newPasswordConfirmError"></div>
+      </div>
+
+      <button class="lg-submit" id="updatePasswordBtn" type="submit">
+        <span class="btn-spinner-icon" id="updateSpinner" style="display: none;">
+          <svg class="spin-svg" viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.35)" stroke-width="3"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+        </span>
+        <span id="updatePasswordText">Şifreyi Güncelle</span>
+      </button>
+
+      <p class="lg-alt">
+        <a href="giris.html">Giriş Sayfasına Dön</a>
+      </p>
+    </form>
+
+  </section>
+</main>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<!-- Supabase JS CDN (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Shared Auth & Navbar Module -->
+<script src="js/auth.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const requestResetForm = $("requestResetForm");
+  const updatePasswordForm = $("updatePasswordForm");
+  const resetEmailInput = $("resetEmail");
+  const resetEmailError = $("resetEmailError");
+  const newPasswordInput = $("newPassword");
+  const newPasswordError = $("newPasswordError");
+  const newPasswordConfirmInput = $("newPasswordConfirm");
+  const newPasswordConfirmError = $("newPasswordConfirmError");
+  const sendResetBtn = $("sendResetBtn");
+  const sendSpinner = $("sendSpinner");
+  const sendResetText = $("sendResetText");
+  const updatePasswordBtn = $("updatePasswordBtn");
+  const updateSpinner = $("updateSpinner");
+  const updatePasswordText = $("updatePasswordText");
+  const successBanner = $("successBanner");
+  const successBannerTitle = $("successBannerTitle");
+  const successBannerText = $("successBannerText");
+  const errorBanner = $("errorBanner");
+  const errorBannerTitle = $("errorBannerTitle");
+  const errorBannerText = $("errorBannerText");
+  const expiredLinkAction = $("expiredLinkAction");
+  const requestNewLinkBtn = $("requestNewLinkBtn");
+  const resetBadge = $("resetBadge");
+  const resetHeading = $("resetHeading");
+  const resetSubtext = $("resetSubtext");
+
+  function isValidEmail(email) {
+    return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(email);
+  }
+
+  function showError(title, text, showRequestNewBtn = false) {
+    errorBannerTitle.textContent = title;
+    errorBannerText.textContent = text;
+    if (expiredLinkAction) {
+      expiredLinkAction.style.display = showRequestNewBtn ? "block" : "none";
+    }
+    errorBanner.style.display = "flex";
+    errorBanner.classList.remove("shake");
+    void errorBanner.offsetWidth;
+    errorBanner.classList.add("shake");
+  }
+
+  function hideError() {
+    errorBanner.style.display = "none";
+    if (expiredLinkAction) expiredLinkAction.style.display = "none";
+  }
+
+  function showSuccess(title, text) {
+    successBannerTitle.textContent = title;
+    successBannerText.textContent = text;
+    successBanner.style.display = "flex";
+  }
+
+  function clearFieldError(inputEl, errEl) {
+    if (inputEl) inputEl.classList.remove("field-error");
+    if (errEl) {
+      errEl.textContent = "";
+      errEl.style.display = "none";
+    }
+  }
+
+  // Show/hide password toggles
+  document.querySelectorAll(".lg-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = $(btn.dataset.target);
+      if (!target) return;
+      const isPass = target.type === "password";
+      target.type = isPass ? "text" : "password";
+      btn.textContent = isPass ? "Gizle" : "Göster";
+    });
+  });
+
+  [resetEmailInput, newPasswordInput, newPasswordConfirmInput].forEach(inp => {
+    if (!inp) return;
+    inp.addEventListener("input", () => {
+      clearFieldError(inp, $(inp.id + "Error"));
+      hideError();
+    });
+  });
+
+  function switchToRequestStep() {
+    updatePasswordForm.style.display = "none";
+    requestResetForm.style.display = "block";
+    hideError();
+    if (resetBadge) resetBadge.textContent = "🔑 Hesap Kurtarma";
+    if (resetHeading) resetHeading.textContent = "Şifremi Unuttum";
+    if (resetSubtext) resetSubtext.textContent = "Kayıtlı e-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.";
+    if (resetEmailInput) resetEmailInput.focus();
+  }
+
+  function switchToRecoveryStep() {
+    requestResetForm.style.display = "none";
+    updatePasswordForm.style.display = "block";
+    if (resetBadge) resetBadge.textContent = "🔐 Yeni Şifre Belirle";
+    if (resetHeading) resetHeading.textContent = "Yeni Şifre Oluştur";
+    if (resetSubtext) resetSubtext.textContent = "Hesabınız için en az 6 karakterlik yeni bir şifre belirleyin.";
+  }
+
+  if (requestNewLinkBtn) {
+    requestNewLinkBtn.addEventListener("click", () => {
+      try {
+        if (window.history && typeof window.history.replaceState === "function") {
+          window.history.replaceState(null, document.title, window.location.pathname);
+        }
+      } catch (_) {}
+      switchToRequestStep();
+    });
+  }
+
+  // Detect recovery mode immediately from captured URL hash/query, PKCE ?code=, or PASSWORD_RECOVERY event
+  async function initRecoveryFlow() {
+    const captured = window.__RECOVERY_INITIAL_URL__ || { hash: "", search: "" };
+    const rawHash = captured.hash || window.location.hash || "";
+    const rawSearch = captured.search || window.location.search || "";
+    const hashParams = new URLSearchParams(rawHash.replace(/^#/, ""));
+    const searchParams = new URLSearchParams(rawSearch);
+
+    const urlError = hashParams.get("error") || searchParams.get("error") || "";
+    const urlErrorDesc = hashParams.get("error_description") || searchParams.get("error_description") || "";
+    const typeVal = (hashParams.get("type") || searchParams.get("type") || "").toLowerCase();
+    const pkceCode = searchParams.get("code") || "";
+    const hasAccessToken = hashParams.has("access_token") || rawHash.includes("access_token=");
+    const hasTokenHash = searchParams.has("token_hash") || hashParams.has("token_hash");
+
+    // 1. Expired or invalid reset link in URL
+    if (urlError || urlErrorDesc) {
+      requestResetForm.style.display = "none";
+      updatePasswordForm.style.display = "none";
+      showError(
+        "Bağlantı Geçersiz veya Süresi Dolmuş",
+        "Şifre sıfırlama bağlantısının süresi dolmuş veya geçersiz. Lütfen yeni bir sıfırlama bağlantısı isteyin.",
+        true
+      );
+      return;
+    }
+
+    const client = window.SorBakalimAuth && typeof window.SorBakalimAuth.getClient === "function"
+      ? window.SorBakalimAuth.getClient()
+      : null;
+
+    // 2. Listen for Supabase PASSWORD_RECOVERY auth event
+    if (client && client.auth && typeof client.auth.onAuthStateChange === "function") {
+      client.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY") {
+          hideError();
+          switchToRecoveryStep();
+        }
+      });
+    }
+
+    // 3. Direct recovery link indicators -> immediately show Step 2 and hide Step 1
+    if (typeVal === "recovery" || hasAccessToken || hasTokenHash || pkceCode) {
+      switchToRecoveryStep();
+
+      // Handle PKCE ?code= exchange if present
+      if (pkceCode && client && client.auth && typeof client.auth.exchangeCodeForSession === "function") {
+        try {
+          const { data: sessData } = await client.auth.getSession();
+          if (!sessData || !sessData.session) {
+            const { error: exchErr } = await client.auth.exchangeCodeForSession(pkceCode);
+            if (exchErr) {
+              updatePasswordForm.style.display = "none";
+              showError(
+                "Bağlantı Geçersiz veya Süresi Dolmuş",
+                "Şifre sıfırlama bağlantısının süresi dolmuş veya daha önce kullanılmış. Lütfen yeni bir sıfırlama bağlantısı isteyin.",
+                true
+              );
+              return;
+            }
+          }
+        } catch (_) {
+          updatePasswordForm.style.display = "none";
+          showError(
+            "Doğrulama Hatası",
+            "Şifre sıfırlama bağlantısı doğrulanamadı. Lütfen yeni bir bağlantı isteyin.",
+            true
+          );
+          return;
+        }
+      }
+    }
+  }
+
+  // STEP 1: Request Reset Email
+  requestResetForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearFieldError(resetEmailInput, resetEmailError);
+    hideError();
+    successBanner.style.display = "none";
+
+    const emailVal = resetEmailInput.value.trim();
+    if (!emailVal) {
+      resetEmailInput.classList.add("field-error");
+      resetEmailError.textContent = "Lütfen e-posta adresinizi giriniz.";
+      resetEmailError.style.display = "block";
+      showError("Eksik Bilgi", "Lütfen e-posta adresinizi giriniz.");
+      resetEmailInput.focus();
+      return;
+    }
+    if (!isValidEmail(emailVal)) {
+      resetEmailInput.classList.add("field-error");
+      resetEmailError.textContent = "Lütfen geçerli bir e-posta adresi giriniz.";
+      resetEmailError.style.display = "block";
+      showError("Geçersiz E-posta", "Lütfen geçerli bir e-posta adresi giriniz.");
+      resetEmailInput.focus();
+      return;
+    }
+
+    sendResetBtn.disabled = true;
+    sendSpinner.style.display = "inline-flex";
+    sendResetText.textContent = "Gönderiliyor...";
+
+    try {
+      if (!window.SorBakalimAuth || typeof window.SorBakalimAuth.resetPasswordForEmail !== "function") {
+        throw new Error("Kimlik doğrulama modülü hazır değil.");
+      }
+
+      const redirectUrl = new URL("sifre-sifirla.html", window.location.href).href;
+      const { error } = await window.SorBakalimAuth.resetPasswordForEmail(emailVal, redirectUrl);
+
+      if (error) {
+        let msg = error.message || "Sıfırlama bağlantısı gönderilemedi.";
+        if (String(msg).toLowerCase().includes("rate limit")) {
+          msg = "Çok fazla istek gönderildi. Lütfen birkaç dakika bekleyip tekrar deneyin.";
+        }
+        showError("Gönderim Başarısız", msg);
+        return;
+      }
+
+      showSuccess(
+        "Bağlantı Gönderildi!",
+        "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu kontrol edin."
+      );
+      requestResetForm.reset();
+    } catch (err) {
+      showError("Bağlantı Hatası", err.message || "Sunucuya bağlanılamadı. Lütfen tekrar deneyin.");
+    } finally {
+      sendResetBtn.disabled = false;
+      sendSpinner.style.display = "none";
+      sendResetText.textContent = "Sıfırlama Bağlantısı Gönder";
+    }
+  });
+
+  // STEP 2: Set New Password
+  updatePasswordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearFieldError(newPasswordInput, newPasswordError);
+    clearFieldError(newPasswordConfirmInput, newPasswordConfirmError);
+    hideError();
+    successBanner.style.display = "none";
+
+    const passVal = newPasswordInput.value;
+    const confirmVal = newPasswordConfirmInput.value;
+
+    if (!passVal || passVal.length < 6) {
+      newPasswordInput.classList.add("field-error");
+      newPasswordError.textContent = "Yeni şifreniz en az 6 karakter olmalıdır.";
+      newPasswordError.style.display = "block";
+      showError("Geçersiz Şifre", "Yeni şifreniz en az 6 karakter olmalıdır.");
+      newPasswordInput.focus();
+      return;
+    }
+
+    if (passVal !== confirmVal) {
+      newPasswordConfirmInput.classList.add("field-error");
+      newPasswordConfirmError.textContent = "Girdiğiniz şifreler eşleşmiyor.";
+      newPasswordConfirmError.style.display = "block";
+      showError("Şifreler Eşleşmiyor", "Girdiğiniz şifreler birbiriyle eşleşmiyor.");
+      newPasswordConfirmInput.focus();
+      return;
+    }
+
+    updatePasswordBtn.disabled = true;
+    updateSpinner.style.display = "inline-flex";
+    updatePasswordText.textContent = "Güncelleniyor...";
+
+    try {
+      if (!window.SorBakalimAuth || typeof window.SorBakalimAuth.updatePassword !== "function") {
+        throw new Error("Kimlik doğrulama modülü hazır değil.");
+      }
+
+      const { error } = await window.SorBakalimAuth.updatePassword(passVal);
+
+      if (error) {
+        const lowerErr = String(error.message || "").toLowerCase();
+        if (lowerErr.includes("session") || lowerErr.includes("expired") || lowerErr.includes("token")) {
+          showError(
+            "Bağlantı Süresi Dolmuş",
+            "Şifre sıfırlama bağlantısının süresi dolmuş veya geçersiz. Lütfen yeni bir sıfırlama bağlantısı isteyin.",
+            true
+          );
+        } else {
+          showError("Güncelleme Başarısız", error.message || "Şifre güncellenemedi.");
+        }
+        return;
+      }
+
+      updatePasswordForm.style.display = "none";
+      showSuccess(
+        "Şifre Güncellendi!",
+        "Şifreniz başarıyla güncellendi! Giriş sayfasına yönlendiriliyorsunuz..."
+      );
+
+      try {
+        await window.SorBakalimAuth.signOut();
+      } catch (_) {}
+
+      setTimeout(() => {
+        window.location.href = "giris.html";
+      }, 1500);
+    } catch (err) {
+      showError("Bağlantı Hatası", err.message || "Sunucuya bağlanılamadı. Lütfen tekrar deneyin.");
+    } finally {
+      updatePasswordBtn.disabled = false;
+      updateSpinner.style.display = "none";
+      updatePasswordText.textContent = "Şifreyi Güncelle";
+    }
+  });
+
+  initRecoveryFlow();
+})();
+</script>
+</body>
+</html>

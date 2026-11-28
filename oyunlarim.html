@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Oyunlarım · Sor Bakalım</title>
 <link rel="icon" type="image/png" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -348,6 +348,7 @@
       localStorage.setItem("setup", JSON.stringify(setup));
       localStorage.setItem("game", JSON.stringify(state));
       localStorage.setItem("cats", JSON.stringify(match.cats || []));
+      sessionStorage.setItem("sorBakalimValidGameEntry", "resume");
     } catch (e) {
       console.warn("Oyun durumu yüklenemedi:", e);
     }
@@ -355,40 +356,60 @@
     showLoadingTransition("Oyun Yükleniyor...", "Kaldığınız yerden yarışma ekranına geçiliyor!", "game.html");
   }
 
-  // --- 2. Replay Game (Same categories & teams, scores reset to 0, tiles reset, lifelines fresh) ---
+  // --- 2. Replay Game (Reuse the SAME match card in place — never create duplicate cards) ---
   function replayGame(gameId) {
     const list = getSavedGames();
-    const match = list.find(g => g.id === gameId);
-    if (!match) {
+    const matchIdx = list.findIndex(g => g.id === gameId);
+    if (matchIdx === -1) {
       showToast("Oyun kaydı bulunamadı.", "error");
       return;
     }
 
-    const newMatchId = "match_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+    const match = list[matchIdx];
+    const existingMatchId = match.id;
+    const nowIso = new Date().toISOString();
 
     const setup = {
       gameName: match.gameName || "Özel Maç",
       team1: match.team1 || "Birinci Takım",
       team2: match.team2 || "İkinci Takım",
       cats: match.cats || [],
+      categoriesData: (match.setup && Array.isArray(match.setup.categoriesData)) ? match.setup.categoriesData : undefined,
       lifelines: match.lifelines || { 1: ["double", "call", "pit"], 2: ["double", "call", "pit"] },
-      matchId: newMatchId,
-      createdAt: new Date().toISOString()
+      matchId: existingMatchId,
+      createdAt: match.createdAt || nowIso
     };
 
     const state = {
+      matchId: existingMatchId,
       score: [0, 0],
       turn: 0,
       used: {},
+      finished: false,
       msg: `"${match.gameName || 'Özel Maç'}" baştan başlatıldı! Her iki takıma da başarılar dileriz.`
     };
 
+    // Mevcut kartı yerinde sıfırla (yeni kopya kart ekleme)
+    list[matchIdx] = {
+      ...match,
+      id: existingMatchId,
+      score: [0, 0],
+      turn: 0,
+      used: {},
+      answeredCount: 0,
+      status: "Devam Ediyor",
+      updatedAt: nowIso,
+      setup: { ...setup }
+    };
+
     try {
+      localStorage.setItem("sorBakalimSavedGames", JSON.stringify(list));
       localStorage.setItem("setup", JSON.stringify(setup));
       localStorage.setItem("game", JSON.stringify(state));
       localStorage.setItem("cats", JSON.stringify(match.cats || []));
+      sessionStorage.setItem("sorBakalimValidGameEntry", "replay");
     } catch (e) {
-      console.warn("Yeni oyun oluşturulamadı:", e);
+      console.warn("Oyun sıfırlanamadı:", e);
     }
 
     showLoadingTransition("Oyun Sıfırlanıyor...", "Kategoriler ve takımlar baştan kuruluyor!", "game.html");

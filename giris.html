@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Giriş Yap · Sor Bakalım</title>
 <link rel="icon" type="image/png" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -109,7 +109,7 @@
 
       <!-- Helper Links -->
       <div class="lg-links" style="margin-bottom: 24px;">
-        <a class="forgot" href="#" id="forgotPasswordBtn">Şifremi unuttum?</a>
+        <a class="forgot" href="sifre-sifirla.html" id="forgotPasswordBtn">Şifremi Unuttum</a>
         <a class="create" href="kayit.html">Hesap oluştur</a>
       </div>
 
@@ -169,13 +169,58 @@
     });
   }
 
-  // --- "Şifremi Unuttum" Helper ---
-  if (forgotPasswordBtn) {
-    forgotPasswordBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      alert("Şifrenizi unuttuysanız lütfen kayıtlı e-posta adresinizle İletişim sayfasından bizimle iletişime geçin. Ekibimiz en kısa sürede yardımcı olacaktır.");
-    });
-  }
+  // --- Email Confirmation Callback Handler (Keep user on giris.html with confirmation banner) ---
+  (async function checkEmailConfirmationCallback() {
+    try {
+      const hashStr = window.location.hash || "";
+      const searchStr = window.location.search || "";
+      const hashParams = new URLSearchParams(hashStr.replace(/^#/, ""));
+      const searchParams = new URLSearchParams(searchStr);
+
+      const typeVal = (hashParams.get("type") || searchParams.get("type") || "").toLowerCase();
+      const hasAccessToken = hashParams.has("access_token") || hashStr.includes("access_token=");
+      const hasCode = searchParams.has("code");
+      const isVerifiedCallback =
+        typeVal === "signup" ||
+        typeVal === "email" ||
+        typeVal === "email_change" ||
+        hasAccessToken ||
+        hasCode ||
+        searchParams.get("verified") === "1";
+
+      if (typeVal === "recovery") {
+        // Recovery links should complete on sifre-sifirla.html
+        window.location.replace("sifre-sifirla.html" + searchStr + hashStr);
+        return;
+      }
+
+      if (isVerifiedCallback) {
+        const titleEl = $("successBannerTitle");
+        const textEl = $("successBannerText");
+        if (titleEl) titleEl.textContent = "E-posta Doğrulandı!";
+        if (textEl) textEl.textContent = "E-posta adresiniz başarıyla doğrulandı! Şimdi giriş yapabilirsiniz.";
+        if (successBanner) {
+          successBanner.style.display = "flex";
+        }
+
+        // URL'deki token/parametreleri temizle ama kullanıcıyı giris.html'de tut (index.html'e yönlendirme yapma)
+        try {
+          if (window.history && typeof window.history.replaceState === "function") {
+            window.history.replaceState(null, document.title, window.location.pathname);
+          }
+        } catch (_) {}
+
+        // Doğrulama linki otomatik oturum açtıysa kullanıcı formuyla temiz giriş yapabilsin diye oturumu kapat
+        if (window.SorBakalimAuth && typeof window.SorBakalimAuth.signOut === "function") {
+          setTimeout(() => {
+            window.SorBakalimAuth.signOut().catch(() => {});
+          }, 200);
+        }
+      }
+    } catch (cbErr) {
+      console.warn("Doğrulama bağlantısı kontrol hatası:", cbErr);
+    }
+  })();
 
   // --- Email Validation Regex ---
   function isValidEmail(email) {

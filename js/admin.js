@@ -152,6 +152,7 @@
     adminCreditAmountInput: document.getElementById('adminCreditAmountInput'),
     adminAddCreditsBtn: document.getElementById('adminAddCreditsBtn'),
     adminCreditsResult: document.getElementById('adminCreditsResult'),
+    adminOwnCreditsBadge: document.getElementById('adminOwnCreditsBadge'),
 
     // Toast Container
     toastContainer: document.getElementById('toastContainer')
@@ -163,6 +164,32 @@
     if (el.supabaseSyncStatus) {
       el.supabaseSyncStatus.classList.remove('online', 'error');
       if (statusClass) el.supabaseSyncStatus.classList.add(statusClass);
+    }
+  }
+
+  // Helper: Refresh Admin's Own Live Credit Balance Badge
+  async function refreshAdminOwnCredits() {
+    const supabase = getAdminSupabaseClient();
+    if (!supabase) return null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data: row, error } = await supabase
+        .from('user_game_credits')
+        .select('games_remaining, total_purchased')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const bal = (!error && row && typeof row.games_remaining === 'number') ? row.games_remaining : 0;
+      if (el.adminOwnCreditsBadge) {
+        el.adminOwnCreditsBadge.textContent = `🎟️ Kalan Oyun Hakkım: ${bal}`;
+      }
+      if (window.SorBakalimCredits && typeof window.SorBakalimCredits.fetchCredits === 'function') {
+        window.SorBakalimCredits.fetchCredits().catch(() => {});
+      }
+      return { user, row, balance: bal };
+    } catch (_) {
+      return null;
     }
   }
 
@@ -202,6 +229,7 @@
 
     // 3. Verified Admin — Reveal Admin UI and load live data
     revealAdminUI();
+    refreshAdminOwnCredits();
 
     try {
       loadStats();
@@ -1309,12 +1337,21 @@
       el.closeImageModalBtn.addEventListener('click', () => closeModal(el.imageModal));
     }
 
+    function showAdminCreditResult(message, isSuccess) {
+      if (!el.adminCreditsResult) return;
+      el.adminCreditsResult.textContent = isSuccess ? `✅ ${message}` : `⚠️ ${message}`;
+      el.adminCreditsResult.style.background = isSuccess ? '#D1FAE5' : '#FFEAE8';
+      el.adminCreditsResult.style.color = isSuccess ? '#065F46' : '#DC2626';
+      el.adminCreditsResult.style.border = isSuccess ? '1.5px solid #10B981' : '1.5px solid #DC2626';
+      el.adminCreditsResult.style.display = 'block';
+    }
+
     // Admin Credits Top-Up Form
     if (el.adminAddCreditsForm) {
       el.adminAddCreditsForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const emailValue = (el.adminCreditEmailInput ? el.adminCreditEmailInput.value.trim() : '');
+        const emailValue = (el.adminCreditEmailInput ? el.adminCreditEmailInput.value.trim().toLowerCase() : '');
         const amountValue = (el.adminCreditAmountInput ? el.adminCreditAmountInput.value : '');
         const parsedAmount = parseInt(amountValue, 10);
 
@@ -1346,42 +1383,72 @@
         }
 
         try {
-          const { data, error } = await supabase.rpc('admin_add_credits', {
+          const { data: { user: adminUser } } = await supabase.auth.getUser();
+          const isSelfAdmin = Boolean(adminUser && adminUser.email && emailValue === adminUser.email.toLowerCase());
+
+          // 1. Öncelikli olarak güvenli RPC çağrısını dene
+          const { data: rpcData, error: rpcError } = await supabase.rpc('admin_add_credits', {
             target_email: emailValue,
             amount: parsedAmount
           });
 
-          if (error) {
-            const errMsg = `Hata: ${error.message || 'Oyun hakkı eklenemedi.'}`;
-            if (el.adminCreditsResult) {
-              el.adminCreditsResult.textContent = `⚠️ ${errMsg}`;
-              el.adminCreditsResult.style.background = '#FFEAE8';
-              el.adminCreditsResult.style.color = '#DC2626';
-              el.adminCreditsResult.style.border = '1.5px solid #DC2626';
-              el.adminCreditsResult.style.display = 'block';
-            }
-            showToast(errMsg, "error");
+          if (!rpcError && rpcData !== null && rpcData !== undefined) {
+            const successMsg = `${emailValue} hesabına +${parsedAmount} oyun hakkı eklendi. Yeni bakiye: ${rpcData}`;
+            showAdminCreditResult(successMsg, true);
+            showToast(`Oyun hakkı eklendi! Yeni bakiye: ${rpcData}`, "success");
+            await refreshAdminOwnCredits();
             return;
           }
 
-          const successMsg = `${emailValue} hesabına +${parsedAmount} oyun hakkı eklendi. Yeni bakiye: ${data}`;
-          if (el.adminCreditsResult) {
-            el.adminCreditsResult.textContent = `✅ ${successMsg}`;
-            el.adminCreditsResult.style.background = '#D1FAE5';
-            el.adminCreditsResult.style.color = '#065F46';
-            el.adminCreditsResult.style.border = '1.5px solid #10B981';
-            el.adminCreditsResult.style.display = 'block';
+          // 2. Kendi admin hesabı için satır yoksa veya RPC 0 satır döndürdüyse doğrudan upsert dene
+          if (isSelfAdmin && adminUser) {
+            const { data: existingRow } = await supabase
+              .from('user_game_credits')
+              .select('games_remaining, total_purchased')
+              .eq('user_id', adminUser.id)
+              .maybeSingle();
+
+            const curRemaining = (existingRow && typeof existingRow.games_remaining === 'number') ? existingRow.games_remaining : 0;
+            const curPurchased = (existingRow && typeof existingRow.total_purchased === 'number') ? existingRow.total_purchased : 0;
+            const nextRemaining = curRemaining + parsedAmount;
+            const nextPurchased = curPurchased + parsedAmount;
+
+            const { data: upserted, error: upsertErr } = await supabase
+              .from('user_game_credits')
+              .upsert({
+                user_id: adminUser.id,
+                email: adminUser.email,
+                games_remaining: nextRemaining,
+                total_purchased: nextPurchased
+              }, { onConflict: 'user_id' })
+              .select('games_remaining')
+              .single();
+
+            if (!upsertErr && upserted) {
+              const finalBal = upserted.games_remaining;
+              const successMsg = `${emailValue} hesabına +${parsedAmount} oyun hakkı eklendi. Yeni bakiye: ${finalBal}`;
+              showAdminCreditResult(successMsg, true);
+              showToast(`Oyun hakkı eklendi! Yeni bakiye: ${finalBal}`, "success");
+              await refreshAdminOwnCredits();
+              return;
+            }
+
+            // Eğer ilk RPC başarısız olduysa ve yukarıda satır oluşturulamadıysa net Türkçe hata göster
+            const detailErr = (rpcError && rpcError.message) || (upsertErr && upsertErr.message) || "Yönetici hesabı için kredi satırı bulunamadı veya güncellenemedi.";
+            showAdminCreditResult(`Hata: ${detailErr}`, false);
+            showToast(`Hata: ${detailErr}`, "error");
+            return;
           }
-          showToast(`Oyun hakkı eklendi! Yeni bakiye: ${data}`, "success");
+
+          // 3. Başka bir kullanıcı için RPC hata verdiyse veya 0 satır güncellediyse net Türkçe hata göster
+          const errMsg = rpcError
+            ? `Hata: ${rpcError.message || 'Oyun hakkı eklenemedi.'}`
+            : `Hata: '${emailValue}' e-posta adresine ait kayıt bulunamadı. Kullanıcının önce kayıt olup giriş yapması gerekir.`;
+          showAdminCreditResult(errMsg, false);
+          showToast(errMsg, "error");
         } catch (err) {
           const errMsg = `İşlem hatası: ${err.message || err}`;
-          if (el.adminCreditsResult) {
-            el.adminCreditsResult.textContent = `⚠️ ${errMsg}`;
-            el.adminCreditsResult.style.background = '#FFEAE8';
-            el.adminCreditsResult.style.color = '#DC2626';
-            el.adminCreditsResult.style.border = '1.5px solid #DC2626';
-            el.adminCreditsResult.style.display = 'block';
-          }
+          showAdminCreditResult(errMsg, false);
           showToast(errMsg, "error");
         } finally {
           if (btn) {

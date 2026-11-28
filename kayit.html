@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hesap Oluştur · Sor Bakalım</title>
 <link rel="icon" type="image/png" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -218,7 +218,8 @@
       resendSignupBtn.textContent = "Gönderiliyor...";
       if (resendStatusText) resendStatusText.style.display = "none";
       try {
-        const { error } = await window.SorBakalimAuth.resendConfirmationEmail(lastRegisteredEmail);
+        const redirectUrl = new URL('giris.html', window.location.href).href;
+        const { error } = await window.SorBakalimAuth.resendConfirmationEmail(lastRegisteredEmail, redirectUrl);
         if (error) {
           if (resendStatusText) {
             resendStatusText.textContent = "⚠️ " + (error.message || "E-posta gönderilemedi. Lütfen biraz bekleyip tekrar deneyin.");
@@ -418,7 +419,8 @@
         throw new Error("Kimlik doğrulama modülü yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
       }
 
-      const { data, error } = await window.SorBakalimAuth.signUp(emailVal, passwordVal, fullNameVal);
+      const redirectUrl = new URL('giris.html', window.location.href).href;
+      const { data, error } = await window.SorBakalimAuth.signUp(emailVal, passwordVal, fullNameVal, redirectUrl);
 
       if (error) {
         let msg = error.message;

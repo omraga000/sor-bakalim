@@ -2,7 +2,7 @@
 <html lang="tr" class="game-html">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Sor Bakalım - Oyun Alanı</title>
 <link rel="icon" type="image/png" href="img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +24,6 @@
 
   <header class="game-topbar">
     <div class="topbar-left">
-      <button class="control-btn exit-btn" onclick="location.href='index.html'">Çıkış</button>
       <button class="control-btn" onclick="location.href='oyunlarim.html'">Oyunlarım</button>
       <button class="control-btn finish-btn" onclick="finishGame()">Oyunu Bitir</button>
     </div>
@@ -32,16 +31,7 @@
       <a href="index.html" class="logo-nav-link" title="Ana Sayfaya Dön"><img src="img/logo.png" alt="Sor Bakalım" class="topbar-logo-img"><span class="game-room-title" id="roomTitle">Sor Bakalım - Özel Maç</span></a>
     </div>
     <div class="topbar-right">
-      <span class="remaining-games-badge credits-loading" id="remainingGamesBadge" data-credits-badge title="Kalan Oyun Hakkınız">
-        <span>🎟️ Kalan Oyun Hakkı:</span>
-        <strong data-credits-count>...</strong>
-      </span>
       <div class="turn-badge" id="currentTurnBadge">Sıra: Birinci Takım</div>
-      <div class="auth" id="gameAuthNav">
-        <a href="giris.html">Giriş Yap</a>
-        <span class="sep"></span>
-        <a href="kayit.html">Hesap Oluştur</a>
-      </div>
     </div>
   </header>
 
@@ -85,7 +75,5 @@
 
   <script src="js/questions.js"></script>
   <script src="js/game.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/credits.js"></script>
 </body>
 </html>

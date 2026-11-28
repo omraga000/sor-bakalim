@@ -1958,3 +1958,86 @@ img {
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--border-dark);
 }
+
+/* ==========================================================================
+   ADMIN MULTI-DEVICE RESPONSIVE (MOBILE / TABLET) & TV / FOCUS-VISIBLE
+   ========================================================================== */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3.5px solid var(--primary-orange, #F97316) !important;
+  outline-offset: 3px !important;
+}
+
+.table-responsive,
+.questions-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  input, select, textarea,
+  .form-input, .form-select, .form-textarea {
+    font-size: 16px !important;
+  }
+
+  .btn,
+  .btn-sm,
+  .btn-table-action {
+    min-height: 44px;
+  }
+
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .admin-container {
+    padding: 14px 12px;
+  }
+
+  .stats-grid,
+  .category-cards-grid,
+  .categories-ranking-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #adminAddCreditsForm {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  #adminAddCreditsBtn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 1400px) {
+  .admin-container,
+  .header-container {
+    max-width: 1480px;
+    padding-inline: clamp(28px, 3vw, 56px);
+  }
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 18px;
+  }
+}

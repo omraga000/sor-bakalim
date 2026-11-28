@@ -148,16 +148,18 @@ function finish(w) {
     }
   } catch (_) {}
 
+  try { sessionStorage.setItem("sorBakalimValidGameEntry", "from_soru"); } catch (_) {}
   location.href = "game.html";
 }
 
 /* ---------- başlat (her şey tanımlandıktan sonra) ---------- */
 function initSoru() {
   if (!game) {
-    location.replace("game.html");               // oyun oturumu yoksa → tahtaya dön
+    location.replace("index.html");               // oyun oturumu yoksa → ana sayfaya dön
     return;
   }
   if (game.used && game.used[key]) {
+    try { sessionStorage.setItem("sorBakalimValidGameEntry", "from_soru"); } catch (_) {}
     location.replace("game.html");               // zaten oynanmış soru → tahtaya dön
     return;
   }

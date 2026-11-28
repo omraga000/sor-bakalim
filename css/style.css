@@ -5234,10 +5234,402 @@ body.game-body .remaining-games-badge {
   }
 }
 
-/* --- TVs & large displays: scale the whole PC layout up (rem-based maxima) --- */
-@media (min-width: 1920px) and (min-height: 900px) {
-  html:not(.game-html) { font-size: 18px; }
+/* ==========================================================================
+   MULTI-DEVICE RESPONSIVE (MOBILE, TABLET) & TV / LARGE-SCREEN SYSTEM
+   ========================================================================== */
+
+/* Prevent horizontal overflow globally */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
+
+/* High-Contrast Keyboard, Remote & D-Pad Focus Indicator */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.card:focus-visible,
+.point-tile:focus-visible,
+.lifeline-btn:focus-visible,
+.buy-package-item:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3.5px solid var(--brand-orange, #F97316) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px rgba(36, 28, 24, 0.25) !important;
+}
+
+/* --- TABLET LAYOUT (<= 1024px) --- */
+@media (max-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+
+  body.game-body {
+    height: auto !important;
+    min-height: 100dvh;
+    overflow-y: auto !important;
+  }
+
+  body.game-body .game-main-container {
+    height: auto !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px !important;
+  }
+
+  body.game-body .board-grid {
+    grid-template-columns: repeat(6, minmax(150px, 1fr)) !important;
+    min-width: 940px;
+    gap: 12px !important;
+    height: auto !important;
+  }
+
+  body.game-body .point-tile {
+    min-height: 54px;
+    font-size: 1.25rem !important;
+  }
+}
+
+/* --- MOBILE PHONES (<= 768px) --- */
+@media (max-width: 768px) {
+  /* Prevent iOS Safari auto-zoom on form fields */
+  input, select, textarea,
+  .main-input, .lg-input {
+    font-size: 16px !important;
+  }
+
+  /* Touch-friendly tap targets (>= 44px) */
+  button,
+  .hero-btn,
+  .final-start-btn,
+  .buy-games-btn,
+  .buy-package-item,
+  .dropdown-item-link,
+  .dropdown-logout-btn,
+  .lg-submit,
+  .control-btn,
+  .primary-btn,
+  .modal-close-btn,
+  .lifeline-btn,
+  .banner-action-btn {
+    min-height: 44px;
+  }
+
+  /* Navbar & Credits Dropdown */
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 10px;
+    padding: 10px 12px;
+  }
+
+  .logo {
+    margin-right: auto;
+    font-size: 1.35rem;
+  }
+
+  .logo-img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nav-credits-group {
+    order: 4;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 6px;
+    border-top: 1.5px solid var(--border-subtle, #DFCCA8);
+  }
+
+  .buy-games-dropdown-menu {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: 440px;
+    margin: 0 auto;
+    transform: none !important;
+    z-index: 2400;
+  }
+
+  /* Modals full-width on mobile */
+  .modal-card,
+  .credits-modal-card {
+    width: min(94vw, 440px) !important;
+    padding: 22px 16px 18px !important;
+  }
+
+  /* Category Setup Grid (2 columns on phones) */
+  .sec {
+    padding-inline: 12px !important;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .startbar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .teams-inputs-grid,
+  .lifelines-grid,
+  .team-lifelines-grid,
+  .rules-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .final-start-btn {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Game Board (game.html) — Preserve 6-column board proportions with smooth horizontal scroll */
+  body.game-body .game-topbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    height: auto !important;
+  }
+
+  body.game-body .topbar-left,
+  body.game-body .topbar-center,
+  body.game-body .topbar-right {
+    width: 100%;
+    justify-content: center !important;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  body.game-body .game-main-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px !important;
+  }
+
+  body.game-body .board-grid {
+    grid-template-columns: repeat(6, minmax(145px, 1fr)) !important;
+    min-width: 920px;
+    gap: 10px !important;
+  }
+
+  body.game-body .column-header {
+    padding: 10px 8px !important;
+    font-size: 0.95rem !important;
+    min-height: 46px;
+  }
+
+  body.game-body .point-tile {
+    min-height: 52px !important;
+    font-size: 1.2rem !important;
+    padding: 12px 8px !important;
+  }
+
+  body.game-body .game-footer-bar {
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    height: auto !important;
+  }
+
+  body.game-body .team-panel {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding: 10px 12px !important;
+  }
+
+  body.game-body .game-status-msg {
+    width: 100%;
+    text-align: center;
+    font-size: 0.9rem !important;
+    order: -1;
+  }
+
+  /* Question View (soru.html) — Portrait phone optimized */
+  .q-wrap {
+    grid-template-columns: 1fr !important;
+    padding: 12px !important;
+    gap: 14px !important;
+    height: auto !important;
+  }
+
+  .q-frame {
+    padding: 18px 14px 72px !important;
+    min-height: 320px;
+  }
+
+  .q-text,
+  .q-answer {
+    font-size: clamp(1.15rem, 5vw, 1.55rem) !important;
+    line-height: 1.4 !important;
+    word-break: break-word;
+  }
+
+  .q-frame img {
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 240px !important;
+  }
+
+  .q-side {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .q-btn {
+    min-height: 46px !important;
+    font-size: 0.95rem !important;
+    padding: 10px 14px !important;
+  }
+
+  /* Auth & Contact Cards */
+  .lg-wrap {
+    padding: 18px 12px !important;
+  }
+
+  .lg-card {
+    padding: 22px 16px !important;
+    width: 100% !important;
+  }
+}
+
+/* --- SMALL MOBILE PHONES (<= 480px) --- */
+@media (max-width: 480px) {
+  .credits-modal-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .remaining-games-badge,
+  .buy-games-btn {
+    font-size: 0.82rem;
+    padding: 6px 12px;
+  }
+
+  .card-title-banner .card-name {
+    font-size: 0.85rem !important;
+  }
+
+  body.game-body .score-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+}
+
+/* --- LARGE DESKTOP & TV SCREENS (>= 1400px) --- */
+@media (min-width: 1400px) {
+  /* TV Overscan Safe Margins */
+  .nav {
+    max-width: 1480px;
+    padding-inline: clamp(28px, 3vw, 56px);
+  }
+
+  main#ana,
+  .sec,
+  .team-setup-section .container,
+  .game-rules-section .container {
+    max-width: 1440px;
+    padding-inline: clamp(28px, 3vw, 56px);
+  }
+
+  body.game-body .game-topbar,
+  body.game-body .game-main-container,
+  body.game-body .game-footer-bar {
+    padding-inline: clamp(28px, 3vw, 56px) !important;
+  }
+
+  body.game-body .column-header {
+    font-size: 1.15rem;
+    padding: 14px 10px;
+  }
+
+  body.game-body .point-tile {
+    font-size: 1.85rem;
+  }
+
+  body.game-body .team-name {
+    font-size: 1.25rem;
+  }
+
+  body.game-body .score-value {
+    font-size: 1.75rem;
+  }
+
+  .q-wrap {
+    max-width: 1520px;
+    margin-inline: auto;
+    padding-inline: clamp(28px, 3vw, 56px);
+  }
+
+  .q-text,
+  .q-answer {
+    font-size: clamp(1.85rem, 2.4vw, 2.75rem);
+    line-height: 1.35;
+  }
+
+  .q-pts {
+    font-size: 1.5rem;
+  }
+
+  .q-timer {
+    font-size: 1.45rem;
+  }
+}
+
+/* --- 1080p / 4K LIVING-ROOM TVs (>= 1920px) --- */
+@media (min-width: 1920px) {
+  html:not(.game-html) { font-size: 19px; }
+
+  /* Generous TV Overscan Safe Area */
+  body.game-body {
+    padding: 16px 36px;
+  }
+
+  body.game-body .game-topbar {
+    border-radius: 16px;
+  }
+
+  body.game-body .game-footer-bar {
+    border-radius: 16px;
+  }
+
+  body.game-body .column-header {
+    font-size: 1.4rem;
+    padding: 16px 12px;
+  }
+
+  body.game-body .point-tile {
+    font-size: 2.35rem;
+  }
+
+  body.game-body .team-name {
+    font-size: 1.5rem;
+  }
+
+  body.game-body .score-value {
+    font-size: 2.2rem;
+  }
+
+  .q-text,
+  .q-answer {
+    font-size: clamp(2.25rem, 2.6vw, 3.25rem);
+  }
+}
+
 @media (min-width: 2560px) and (min-height: 1300px) {
   html:not(.game-html) { font-size: 22px; }
 }
